@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
+import { useSession } from "next-auth/react"
 import { toast } from "sonner"
 import {
   Star,
@@ -11,8 +13,10 @@ import {
   ShieldCheck,
   Send,
   X,
-  Sparkles,
+  Lock,
+  ArrowRight,
   Quote,
+  LogIn,
 } from "lucide-react"
 import { INITIAL_FEEDBACKS, FeedbackItem } from "@/lib/feedbackStore"
 import { Input } from "@/components/ui/input"
@@ -20,9 +24,11 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 
 export function FeedbackSection() {
+  const { data: session, status } = useSession()
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>(INITIAL_FEEDBACKS)
   const [filter, setFilter] = useState<"all" | "customer" | "brand">("all")
   const [modalOpen, setModalOpen] = useState(false)
+  const [authRequiredOpen, setAuthRequiredOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
   // Form State
@@ -32,6 +38,16 @@ export function FeedbackSection() {
   const [formRating, setFormRating] = useState<number>(5)
   const [hoverRating, setHoverRating] = useState<number | null>(null)
   const [formComment, setFormComment] = useState("")
+
+  // Populate from active session if logged in
+  useEffect(() => {
+    if (session?.user) {
+      setFormName(session.user.name ?? "")
+      if (session.user.role === "BRAND") {
+        setFormUserType("brand")
+      }
+    }
+  }, [session])
 
   // Fetch latest live feedback on mount
   useEffect(() => {
@@ -45,11 +61,19 @@ export function FeedbackSection() {
           }
         }
       } catch (err) {
-        // Use default seed
+        // Fallback to initial
       }
     }
     loadFeedbacks()
   }, [])
+
+  function handleOpenFeedbackModal() {
+    if (!session) {
+      setAuthRequiredOpen(true)
+      return
+    }
+    setModalOpen(true)
+  }
 
   // Calculate stats
   const totalReviews = feedbacks.length
@@ -65,6 +89,13 @@ export function FeedbackSection() {
 
   async function handleFeedbackSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    if (!session) {
+      setModalOpen(false)
+      setAuthRequiredOpen(true)
+      return
+    }
+
     if (!formName.trim() || !formComment.trim()) {
       toast.error("Please enter your name and review comment.")
       return
@@ -72,13 +103,14 @@ export function FeedbackSection() {
 
     setSubmitting(true)
 
+    const isBrand = session.user.role === "BRAND" || formUserType === "brand"
     const payload = {
-      name: formName.trim(),
-      role: formUserType === "brand" ? "Brand Partner" : "Verified Consumer",
-      companyOrLocation: formCompanyOrLocation.trim() || (formUserType === "brand" ? "Brand Partner" : "India"),
+      name: formName.trim() || session.user.name || "Verified Member",
+      role: isBrand ? "Brand Partner" : "Verified Consumer",
+      companyOrLocation: formCompanyOrLocation.trim() || (isBrand ? "Brand Partner" : "India"),
       rating: formRating,
       comment: formComment.trim(),
-      userType: formUserType,
+      userType: isBrand ? "brand" : "customer",
     }
 
     try {
@@ -93,23 +125,18 @@ export function FeedbackSection() {
         if (data.feedback) {
           setFeedbacks((prev) => [data.feedback, ...prev])
         }
+        toast.success("Thank you! Your verified feedback has been published in real-time.")
+        setModalOpen(false)
+        setFormComment("")
+        setFormRating(5)
+      } else if (res.status === 401) {
+        toast.error("Authentication required. Please sign in to submit feedback.")
+        setModalOpen(false)
+        setAuthRequiredOpen(true)
       } else {
-        // Optimistic fallback
-        const optimisticItem: FeedbackItem = {
-          id: `fb-local-${Date.now()}`,
-          ...payload,
-          createdAt: new Date().toISOString(),
-          isVerified: true,
-        }
-        setFeedbacks((prev) => [optimisticItem, ...prev])
+        const errorData = await res.json()
+        toast.error(errorData.error || "Failed to submit feedback.")
       }
-
-      toast.success("Thank you! Your feedback has been published in real-time.")
-      setModalOpen(false)
-      setFormName("")
-      setFormCompanyOrLocation("")
-      setFormComment("")
-      setFormRating(5)
     } catch (err) {
       toast.error("Failed to transmit feedback. Please try again.")
     } finally {
@@ -130,7 +157,7 @@ export function FeedbackSection() {
             <span className="heading-center-underline">What Customers & Brands Are Saying</span>
           </h2>
           <p className="text-xs sm:text-sm text-[#5B6472] max-w-xl mx-auto mt-4 leading-relaxed font-mono">
-            Direct, unfiltered reviews from verified consumer data earners and research enterprise partners.
+            Direct, authenticated reviews from verified consumer data earners and research enterprise partners.
           </p>
         </div>
 
@@ -211,7 +238,7 @@ export function FeedbackSection() {
               </div>
 
               <p className="text-[11px] text-[#5B6472] font-mono text-center md:text-left">
-                Every rating is authenticated against platform activity.
+                Every rating is authenticated against signed-in platform accounts.
               </p>
             </div>
 
@@ -219,7 +246,7 @@ export function FeedbackSection() {
             <div className="md:col-span-3 flex justify-center md:justify-end">
               <button
                 type="button"
-                onClick={() => setModalOpen(true)}
+                onClick={handleOpenFeedbackModal}
                 className="btn-primary w-full sm:w-auto py-3.5 px-5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-[3px_3px_0_0_#1B3A5C] bg-[#E3474F] text-white hover:translate-x-0.5 hover:translate-y-0.5 transition-transform"
               >
                 <MessageSquarePlus size={16} /> Share Your Feedback
@@ -300,7 +327,76 @@ export function FeedbackSection() {
       </div>
 
       {/* ══════════════════════════════════════════════════
-          FEEDBACK SUBMISSION MODAL (Vintage Themed)
+          SIGN-IN REQUIRED MODAL (Auth Gate Before Action)
+      ══════════════════════════════════════════════════ */}
+      {authRequiredOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-sm animate-in fade-in duration-150">
+          <div
+            className="bg-[#EDE7DA] border-4 sm:border-6 border-[#1B3A5C] shadow-[12px_12px_0_0_rgba(27,58,92,0.3)] max-w-md w-full p-6 sm:p-8 relative text-center"
+            style={{
+              backgroundImage:
+                "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M24 0H0v24' fill='none' stroke='%231B3A5C' stroke-opacity='0.06'/%3E%3C/svg%3E\")",
+            }}
+          >
+            {/* Close button */}
+            <button
+              type="button"
+              onClick={() => setAuthRequiredOpen(false)}
+              className="absolute top-4 right-4 p-1.5 border-2 border-[#1B3A5C] bg-[#1B3A5C] text-[#F4F1E9] hover:bg-[#E3474F] transition-colors"
+              aria-label="Close"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Lock Icon Emblem */}
+            <div className="w-14 h-14 bg-[#1B3A5C] text-[#F4F1E9] border-2 border-[#E3474F] flex items-center justify-center mx-auto mb-4 shadow-[3px_3px_0_0_#E3474F]">
+              <Lock size={26} className="text-[#EF6A6E]" />
+            </div>
+
+            <span className="font-mono text-xs uppercase tracking-widest text-[#E3474F] font-bold">
+              Sign In Required
+            </span>
+            <h3 className="font-display text-2xl font-bold uppercase text-[#1B3A5C] mt-1 mb-3">
+              Authentication Gate
+            </h3>
+
+            <div className="w-16 border-t-2 border-dashed border-[#E3474F] mx-auto mb-4" />
+
+            <p className="text-xs sm:text-sm text-[#5B6472] font-mono leading-relaxed mb-6">
+              To keep our community ratings 100% verified and free of bots, all feedback submissions require you to sign in to an active DataCo-op account.
+            </p>
+
+            {/* Auth Action Buttons */}
+            <div className="space-y-3">
+              <Link
+                href="/login?callbackUrl=/#feedback"
+                className="btn-primary w-full py-3.5 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 shadow-[2px_2px_0_0_#1B3A5C] bg-[#E3474F] text-white"
+              >
+                <LogIn size={15} /> Sign In as Consumer
+              </Link>
+
+              <Link
+                href="/brand/login?callbackUrl=/#feedback"
+                className="btn-ghost w-full py-3 text-xs font-bold uppercase tracking-widest border-2 border-[#1B3A5C] text-[#1B3A5C] bg-white flex items-center justify-center gap-2 hover:bg-[#1B3A5C] hover:text-white transition-colors"
+              >
+                <Building2 size={15} /> Sign In as Brand Partner
+              </Link>
+
+              <div className="pt-2 border-t border-dashed border-[#1B3A5C]/20">
+                <Link
+                  href="/register"
+                  className="text-xs font-mono font-bold text-[#1B3A5C] hover:text-[#E3474F] underline flex items-center justify-center gap-1"
+                >
+                  Don&apos;t have an account? Create Free Account <ArrowRight size={13} />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════
+          FEEDBACK SUBMISSION MODAL (For Authenticated Users)
       ══════════════════════════════════════════════════ */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
@@ -324,50 +420,18 @@ export function FeedbackSection() {
             {/* Modal Title */}
             <div className="mb-6 pb-3 border-b-2 border-dashed border-[#E3474F]/50">
               <span className="font-mono text-xs uppercase tracking-widest text-[#E3474F] font-bold">
-                Direct Submission
+                Authenticated Feedback
               </span>
               <h3 className="font-display text-2xl font-bold uppercase text-[#1B3A5C] mt-0.5">
                 Share Your Experience
               </h3>
               <p className="text-xs text-[#5B6472] font-mono mt-1">
-                Your review will appear immediately on the DataCo-op community board.
+                Posting as: <strong>{session?.user?.email}</strong> ({session?.user?.role === "BRAND" ? "Brand" : "Consumer"})
               </p>
             </div>
 
             {/* Form */}
             <form onSubmit={handleFeedbackSubmit} className="space-y-4">
-              {/* User Type Switcher */}
-              <div className="space-y-1.5">
-                <Label className="font-mono text-xs uppercase font-bold text-[#1B3A5C]">
-                  I am submitting as a:
-                </Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setFormUserType("customer")}
-                    className={`py-2 px-3 text-xs font-mono font-bold uppercase border-2 flex items-center justify-center gap-1.5 transition-all ${
-                      formUserType === "customer"
-                        ? "bg-[#1B3A5C] text-white border-[#1B3A5C] shadow-[2px_2px_0_0_#E3474F]"
-                        : "bg-white text-[#1B3A5C] border-[#1B3A5C]/40"
-                    }`}
-                  >
-                    <Users size={14} /> Consumer / Customer
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setFormUserType("brand")}
-                    className={`py-2 px-3 text-xs font-mono font-bold uppercase border-2 flex items-center justify-center gap-1.5 transition-all ${
-                      formUserType === "brand"
-                        ? "bg-[#1B3A5C] text-white border-[#1B3A5C] shadow-[2px_2px_0_0_#E3474F]"
-                        : "bg-white text-[#1B3A5C] border-[#1B3A5C]/40"
-                    }`}
-                  >
-                    <Building2 size={14} /> Brand Partner
-                  </button>
-                </div>
-              </div>
-
               {/* Star Rating Picker */}
               <div className="space-y-1.5 p-3.5 bg-white border-2 border-[#1B3A5C]">
                 <Label className="font-mono text-xs uppercase font-bold text-[#1B3A5C] block mb-1">
@@ -407,7 +471,7 @@ export function FeedbackSection() {
               {/* Name Input */}
               <div className="space-y-1">
                 <Label htmlFor="fb-name" className="font-mono text-xs uppercase font-bold text-[#1B3A5C]">
-                  Your Full Name *
+                  Your Display Name *
                 </Label>
                 <Input
                   id="fb-name"
@@ -422,11 +486,11 @@ export function FeedbackSection() {
               {/* Location or Company */}
               <div className="space-y-1">
                 <Label htmlFor="fb-company" className="font-mono text-xs uppercase font-bold text-[#1B3A5C]">
-                  {formUserType === "brand" ? "Company / Brand Name *" : "City & State (Location)"}
+                  {session?.user?.role === "BRAND" ? "Company / Brand Name *" : "City & State (Location)"}
                 </Label>
                 <Input
                   id="fb-company"
-                  placeholder={formUserType === "brand" ? "e.g. Tata Consumer Products" : "e.g. Hyderabad, Telangana"}
+                  placeholder={session?.user?.role === "BRAND" ? "e.g. Tata Consumer Products" : "e.g. Hyderabad, Telangana"}
                   value={formCompanyOrLocation}
                   onChange={(e) => setFormCompanyOrLocation(e.target.value)}
                   className="rounded-none border-2 border-[#1B3A5C] bg-white h-11 text-xs sm:text-sm"
@@ -436,13 +500,13 @@ export function FeedbackSection() {
               {/* Feedback Comment */}
               <div className="space-y-1">
                 <Label htmlFor="fb-comment" className="font-mono text-xs uppercase font-bold text-[#1B3A5C]">
-                  Your Feedback / Testimonial *
+                  Your Feedback / Review *
                 </Label>
                 <Textarea
                   id="fb-comment"
                   required
                   rows={4}
-                  placeholder="Tell us what you loved about DataCo-op, how much you earned, or the research quality..."
+                  placeholder="Tell us about your experience with DataCo-op, survey rewards, or brand research cohorts..."
                   value={formComment}
                   onChange={(e) => setFormComment(e.target.value)}
                   className="rounded-none border-2 border-[#1B3A5C] bg-white text-xs sm:text-sm resize-none"
@@ -461,7 +525,7 @@ export function FeedbackSection() {
                   </>
                 ) : (
                   <>
-                    <Send size={15} /> Publish Live Feedback
+                    <Send size={15} /> Publish Verified Feedback
                   </>
                 )}
               </button>

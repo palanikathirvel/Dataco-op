@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { getAllFeedbacks, addFeedback, getFeedbackStats } from "@/lib/feedbackStore"
 
 export async function GET() {
@@ -9,6 +11,14 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session) {
+      return NextResponse.json(
+        { error: "Authentication required. Please sign in as a user or brand to share feedback." },
+        { status: 401 }
+      )
+    }
+
     const body = await req.json()
     const { name, role, companyOrLocation, rating, comment, userType } = body
 
@@ -27,13 +37,17 @@ export async function POST(req: Request) {
       )
     }
 
+    const sessionRole = session.user.role
+    const finalUserType = sessionRole === "BRAND" ? "brand" : (userType === "brand" ? "brand" : "customer")
+    const finalName = name || session.user.name || "Verified Member"
+
     const newFeedback = addFeedback({
-      name,
-      role: role || (userType === "brand" ? "Brand Partner" : "Verified Customer"),
-      companyOrLocation: companyOrLocation || "India",
+      name: finalName,
+      role: role || (finalUserType === "brand" ? "Brand Partner" : "Verified Customer"),
+      companyOrLocation: companyOrLocation || (finalUserType === "brand" ? "Brand Partner" : "India"),
       rating: parsedRating,
       comment,
-      userType: userType === "brand" ? "brand" : "customer",
+      userType: finalUserType,
     })
 
     const stats = getFeedbackStats()

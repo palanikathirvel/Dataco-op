@@ -193,9 +193,10 @@ export default function HomePage() {
                     { brand: "boAt Audio",  amount: "₹150", time: "5 min", desc: "Audio preferences, age 25–34" },
                     { brand: "Cult.fit",   amount: "₹120", time: "3 min", desc: "Gym membership perception" },
                   ].map((s, i) => (
-                    <div
+                    <Link
                       key={s.brand}
-                      className={`p-3.5 flex justify-between items-center transition-colors ${
+                      href="/login?callbackUrl=/dashboard/surveys"
+                      className={`p-3.5 flex justify-between items-center transition-colors block hover:border-[#EF6A6E] ${
                         i === 0 ? "bg-[#E3474F]/10 border border-[#E3474F]/40" : "bg-[#F4F1E9]/5 border border-[#F4F1E9]/15"
                       }`}
                     >
@@ -204,12 +205,12 @@ export default function HomePage() {
                           {s.brand}
                         </div>
                         <div className="text-[#F4F1E9]/60 text-xs mt-0.5">{s.desc}</div>
-                        <div className="text-[#F4F1E9]/40 text-[10px] font-mono mt-1">~{s.time}</div>
+                        <div className="text-[#F4F1E9]/40 text-[10px] font-mono mt-1">~{s.time} • Sign In to Start</div>
                       </div>
                       <div className="bg-[#E3474F] text-white px-3 py-1.5 text-xs sm:text-sm font-bold font-display shrink-0">
                         {s.amount}
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
 
