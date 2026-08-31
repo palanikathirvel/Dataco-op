@@ -435,3 +435,19 @@ enum UserStatus {
   BANNED
   PENDING_VERIFICATION
 }
+
+model Feedback {
+  id                String   @id @default(uuid())
+  name              String
+  role              String   // e.g. "Verified Consumer" or "Brand Partner"
+  companyOrLocation String?  // e.g. "Mumbai, Maharashtra" or "boAt Audio"
+  rating            Int      @default(5) // 1 to 5
+  comment           String
+  userType          String   @default("customer") // "customer" | "brand"
+  isFeatured        Boolean  @default(true)
+  createdAt         DateTime @default(now())
+
+  @@index([userType])
+  @@index([createdAt])
+}
+

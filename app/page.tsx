@@ -13,8 +13,10 @@ import {
   Star,
   Menu,
   X,
+  MessageSquarePlus,
 } from "lucide-react"
 import { Logo } from "@/components/ui/logo"
+import { FeedbackSection } from "@/components/feedback/FeedbackSection"
 
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -37,10 +39,11 @@ export default function HomePage() {
               { label: "How it Works", href: "#how-it-works" },
               { label: "For Users",    href: "#for-users" },
               { label: "For Brands",   href: "#for-brands" },
+              { label: "Feedback",     href: "#feedback" },
               { label: "Contact Us",   href: "/contact" },
             ].map((item, i) => (
               <span key={item.href} className="flex items-center">
-                {i > 0 && <span className="nav-divider mx-4 xl:mx-5" />}
+                {i > 0 && <span className="nav-divider mx-3 xl:mx-4" />}
                 <Link href={item.href} className="nav-link text-xs xl:text-sm font-bold tracking-wider uppercase text-[#1B3A5C] hover:text-[#E3474F] transition-colors">
                   {item.label}
                 </Link>
@@ -91,6 +94,7 @@ export default function HomePage() {
                 { label: "How it Works", href: "#how-it-works" },
                 { label: "For Users",    href: "#for-users" },
                 { label: "For Brands",   href: "#for-brands" },
+                { label: "Feedback & Ratings", href: "#feedback" },
                 { label: "Contact Us",   href: "/contact" },
               ].map((item) => (
                 <Link
@@ -465,6 +469,11 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════
+          REAL-TIME FEEDBACK & RATINGS SHOWCASE
+      ══════════════════════════════════════════════════ */}
+      <FeedbackSection />
+
+      {/* ══════════════════════════════════════════════════
           CTA BAND — responsive bottom CTA
       ══════════════════════════════════════════════════ */}
       <section className="section-espresso py-16 md:py-24 relative text-center">
@@ -526,6 +535,7 @@ export default function HomePage() {
                   ["How It Works", "#how-it-works"],
                   ["For Users", "#for-users"],
                   ["For Brands", "#for-brands"],
+                  ["User Reviews", "#feedback"],
                   ["Register", "/register"],
                 ],
               },

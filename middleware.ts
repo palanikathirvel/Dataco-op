@@ -36,6 +36,7 @@ export default withAuth(
         // Public routes
         const publicPaths = [
           "/",
+          "/contact",
           "/login",
           "/register",
           "/admin/login",
@@ -49,7 +50,8 @@ export default withAuth(
           publicPaths.includes(pathname) ||
           pathname.startsWith("/api/auth") ||
           pathname.startsWith("/api/register") ||
-          pathname.startsWith("/api/brand")
+          pathname.startsWith("/api/brand") ||
+          pathname.startsWith("/api/feedback")
         ) {
           return true
         }
