@@ -1,0 +1,437 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String           @id @default(uuid())
+  email           String           @unique
+  passwordHash    String?
+  name            String?
+  age             Int?
+  gender          String?
+  city            String?
+  cityTier        String?
+  phone           String?
+  upiId           String?
+  dpdpConsent     Boolean          @default(false)
+  dpdpConsentAt   DateTime?
+  role            UserRole         @default(USER)
+  status          UserStatus       @default(ACTIVE)
+  emailVerified   DateTime?
+  image           String?
+  googleId        String?          @unique
+  walletBalance   Decimal          @default(0) @db.Decimal(12, 2)
+  totalEarned     Decimal          @default(0) @db.Decimal(12, 2)
+  lastActiveAt    DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  kycStatus       String           @default("PENDING")
+  pincode         String?
+  Account         Account[]
+  cohortTags      CohortTag[]      @relation("UserCohortTags")
+  EmailForwarding EmailForwarding?
+  Notification    Notification[]
+  payouts         PayoutRequest[]
+  purchases       Purchase[]
+  Session         Session[]
+  surveyResponses SurveyResponse[]
+  Transaction     Transaction[]
+
+  @@index([email])
+  @@index([status])
+}
+
+model Purchase {
+  id                String             @id @default(uuid())
+  userId            String
+  platform          String
+  productName       String
+  brand             String?
+  category          String
+  amount            Decimal            @db.Decimal(10, 2)
+  orderId           String?
+  purchaseDate      DateTime
+  status            PurchaseStatus     @default(PENDING_VERIFICATION)
+  method            PurchaseMethod
+  screenshotUrl     String?
+  screenshotData    String?
+  verifiedAt        DateTime?
+  verifiedBy        String?
+  rejectReason      String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime
+  currency          String             @default("INR")
+  exifData          Json?
+  perceptualHash    String?
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  VerificationQueue VerificationQueue?
+
+  @@index([userId])
+  @@index([category])
+  @@index([perceptualHash])
+  @@index([platform])
+  @@index([status])
+}
+
+model CohortTag {
+  id              String   @id @default(uuid())
+  userId          String
+  tag             String
+  createdAt       DateTime @default(now())
+  confidenceScore Float    @default(1.0)
+  user            User     @relation("UserCohortTags", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tag])
+  @@index([tag])
+}
+
+model Brand {
+  id               String            @id @default(uuid())
+  name             String
+  email            String            @unique
+  passwordHash     String
+  website          String?
+  industry         String?
+  contactPerson    String?
+  contactPhone     String?
+  status           BrandStatus       @default(PENDING_APPROVAL)
+  approvedAt       DateTime?
+  approvedBy       String?
+  walletBalance    Decimal           @default(0) @db.Decimal(12, 2)
+  totalSpent       Decimal           @default(0) @db.Decimal(12, 2)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime
+  Notification     Notification[]
+  researchRequests ResearchRequest[]
+  transactions     Transaction[]
+}
+
+model ResearchRequest {
+  id               String           @id @default(uuid())
+  brandId          String
+  title            String
+  description      String
+  targetCohorts    String[]
+  sampleSize       Int
+  pricePerResponse Decimal          @db.Decimal(8, 2)
+  platformFee      Decimal          @default(0.30) @db.Decimal(8, 2)
+  totalBudget      Decimal          @db.Decimal(12, 2)
+  status           ResearchStatus   @default(DRAFT)
+  expiresAt        DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime
+  brand            Brand            @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  SurveyQuestion   SurveyQuestion[]
+  responses        SurveyResponse[]
+  transactions     Transaction[]
+
+  @@index([brandId])
+  @@index([status])
+}
+
+model SurveyResponse {
+  id                String          @id @default(uuid())
+  userId            String
+  researchRequestId String
+  status            ResponseStatus  @default(IN_PROGRESS)
+  startedAt         DateTime        @default(now())
+  submittedAt       DateTime?
+  reviewedAt        DateTime?
+  reviewedBy        String?
+  timeSpent         Int?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime
+  SurveyAnswer      SurveyAnswer[]
+  researchRequest   ResearchRequest @relation(fields: [researchRequestId], references: [id], onDelete: Cascade)
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, researchRequestId])
+  @@index([userId])
+  @@index([researchRequestId])
+  @@index([status])
+}
+
+model Transaction {
+  id                String           @id @default(uuid())
+  userId            String?
+  brandId           String?
+  researchRequestId String?
+  type              TransactionType
+  amount            Decimal          @db.Decimal(10, 2)
+  balanceBefore     Decimal          @db.Decimal(12, 2)
+  balanceAfter      Decimal          @db.Decimal(12, 2)
+  description       String
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  metadata          Json?
+  createdAt         DateTime         @default(now())
+  brand             Brand?           @relation(fields: [brandId], references: [id])
+  researchRequest   ResearchRequest? @relation(fields: [researchRequestId], references: [id])
+  User              User?            @relation(fields: [userId], references: [id])
+
+  @@index([brandId])
+  @@index([researchRequestId])
+  @@index([createdAt])
+  @@index([type])
+  @@index([userId])
+}
+
+model PayoutRequest {
+  id               String       @id @default(uuid())
+  userId           String
+  amount           Decimal      @db.Decimal(10, 2)
+  upiId            String
+  status           PayoutStatus @default(PENDING)
+  razorpayPayoutId String?
+  processedAt      DateTime?
+  processedBy      String?
+  rejectReason     String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Account {
+  id                String  @id
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  User              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Admin {
+  id           String   @id
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+}
+
+model EmailForwarding {
+  id        String   @id
+  userId    String   @unique
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String           @id
+  userId    String?
+  brandId   String?
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  Brand     Brand?           @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  User      User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([brandId])
+  @@index([createdAt])
+  @@index([read])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SurveyAnswer {
+  id             String         @id
+  responseId     String
+  questionId     String
+  value          String
+  timeSpent      Int?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime
+  SurveyQuestion SurveyQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  SurveyResponse SurveyResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
+
+  @@unique([responseId, questionId])
+}
+
+model SurveyQuestion {
+  id                String          @id
+  researchRequestId String
+  type              String
+  question          String
+  options           String[]
+  required          Boolean         @default(true)
+  order             Int
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime
+  SurveyAnswer      SurveyAnswer[]
+  ResearchRequest   ResearchRequest @relation(fields: [researchRequestId], references: [id], onDelete: Cascade)
+
+  @@index([researchRequestId])
+}
+
+model VerificationQueue {
+  id         String   @id
+  purchaseId String   @unique
+  priority   Int      @default(0)
+  assignedTo String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime
+  Purchase   Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+
+  @@index([priority])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum KycStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum Platform {
+  AMAZON
+  FLIPKART
+  SWIGGY
+  ZOMATO
+  MANUAL
+}
+
+enum AccountStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum VerificationMethod {
+  EMAIL_SCREENSHOT
+  OCR
+  BANK_STATEMENT
+  MANUAL
+}
+
+enum PurchaseStatus {
+  PENDING_VERIFICATION
+  VERIFIED
+  REJECTED
+}
+
+enum RequestStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  CLOSED
+  COMPLETED
+}
+
+enum ResponseStatus {
+  IN_PROGRESS
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  PAID
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REJECTED
+}
+
+enum TransactionType {
+  SURVEY_EARNING
+  PAYOUT
+  BRAND_DEPOSIT
+  BRAND_SPEND
+  PLATFORM_FEE
+  REFUND
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  MODERATOR
+}
+
+enum BrandStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum NotificationType {
+  NEW_SURVEY
+  SURVEY_COMPLETED
+  PAYOUT_PROCESSED
+  BRAND_REGISTRATION
+  RESEARCH_APPROVED
+  LOW_BALANCE
+  PURCHASE_VERIFIED
+  PURCHASE_REJECTED
+}
+
+enum PurchaseMethod {
+  SCREENSHOT
+  EMAIL_FORWARD
+  MANUAL_ENTRY
+}
+
+enum ResearchStatus {
+  DRAFT
+  PENDING_PAYMENT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+enum UserRole {
+  USER
+  BRAND
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BANNED
+  PENDING_VERIFICATION
+}

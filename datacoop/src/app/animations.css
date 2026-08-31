@@ -1,0 +1,816 @@
+/* Vintage Animations & Hover Effects
+   Inspired by old-world craftsmanship, brass fixtures, and warm lighting
+*/
+
+/* ============================================
+   KEYFRAME ANIMATIONS
+   ============================================ */
+
+/* Subtle entrance animations */
+@keyframes vintage-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes vintage-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes vintage-fade-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes vintage-fade-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes vintage-zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Decorative animations */
+@keyframes brass-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes vintage-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes filament-glow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(201, 162, 39, 0.3), 0 0 16px rgba(201, 162, 39, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(201, 162, 39, 0.5), 0 0 32px rgba(201, 162, 39, 0.2);
+  }
+}
+
+@keyframes gentle-swing {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
+}
+
+@keyframes slow-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ink-bleed {
+  0% { filter: blur(0); }
+  50% { filter: blur(0.5px); }
+  100% { filter: blur(0); }
+}
+
+/* Click/Press animations */
+@keyframes click-press {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+
+@keyframes click-ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+@keyframes stamp-press {
+  0% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(0.92) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* Page load animations */
+@keyframes vintage-veil {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ============================================
+   ANIMATION UTILITIES
+   ============================================ */
+
+.animate-fade-in {
+  animation: vintage-fade-in 0.8s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: vintage-fade-in-up 0.9s ease-out forwards;
+}
+
+.animate-fade-in-left {
+  animation: vintage-fade-in-left 0.9s ease-out forwards;
+}
+
+.animate-fade-in-right {
+  animation: vintage-fade-in-right 0.9s ease-out forwards;
+}
+
+.animate-zoom-in {
+  animation: vintage-zoom-in 0.6s ease-out forwards;
+}
+
+.animate-filament-glow {
+  animation: filament-glow 2.5s ease-in-out infinite;
+}
+
+.animate-pulse-vintage {
+  animation: vintage-pulse 2s ease-in-out infinite;
+}
+
+.animate-swing {
+  animation: gentle-swing 4s ease-in-out infinite;
+  transform-origin: top center;
+}
+
+.animate-slow-rotate {
+  animation: slow-rotate 30s linear infinite;
+}
+
+.animate-brass-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(201, 162, 39, 0.4) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: brass-shimmer 3s ease-in-out infinite;
+}
+
+/* Stagger delays for sequential animations */
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
+.delay-700 { animation-delay: 0.7s; }
+.delay-1000 { animation-delay: 1s; }
+
+/* ============================================
+   HOVER EFFECTS - BUTTONS
+   ============================================ */
+
+/* Base button transitions */
+button,
+a,
+[role="button"] {
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Primary button - vintage brass glow */
+.btn-vintage,
+button[class*="bg-primary"]:not([class*="ghost"]):not([class*="outline"]):not([class*="secondary"]) {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.btn-vintage::before,
+button[class*="bg-primary"]:not([class*="ghost"]):not([class*="outline"]):not([class*="secondary"])::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.6s ease;
+}
+
+.btn-vintage:hover::before,
+button[class*="bg-primary"]:not([class*="ghost"]):not([class*="outline"]):not([class*="secondary"]):hover::before {
+  left: 100%;
+}
+
+.btn-vintage:hover,
+button[class*="bg-primary"]:not([class*="ghost"]):not([class*="outline"]):not([class*="secondary"]):hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 12px rgba(220, 38, 38, 0.3),
+    0 8px 24px rgba(0, 0, 0, 0.15);
+  filter: brightness(1.05);
+}
+
+.btn-vintage:active,
+button[class*="bg-primary"]:not([class*="ghost"]):not([class*="outline"]):not([class*="secondary"]):active {
+  transform: translateY(0) scale(0.98);
+  animation: click-press 0.2s ease;
+}
+
+/* Outline / Ghost buttons */
+button[class*="outline"]:hover,
+button[class*="ghost"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background-color: rgba(201, 162, 39, 0.1);
+  border-color: rgba(201, 162, 39, 0.6);
+  color: rgba(201, 162, 39, 1);
+}
+
+button[class*="outline"]:active,
+button[class*="ghost"]:active {
+  transform: translateY(0) scale(0.98);
+  animation: click-press 0.2s ease;
+}
+
+/* Secondary buttons */
+button[class*="secondary"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+button[class*="secondary"]:active {
+  transform: translateY(0) scale(0.98);
+  animation: click-press 0.2s ease;
+}
+
+/* ============================================
+   HOVER EFFECTS - CARDS
+   ============================================ */
+
+.vintage-card {
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  overflow: hidden;
+}
+
+.vintage-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.8), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.vintage-card:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow:
+    0 20px 40px rgba(42, 38, 36, 0.2),
+    0 8px 16px rgba(42, 38, 36, 0.1);
+  border-color: rgba(201, 162, 39, 0.6);
+}
+
+.vintage-card:hover::after {
+  transform: translateX(100%);
+}
+
+.vintage-card:hover .vintage-card-title {
+  color: rgba(201, 162, 39, 1);
+  letter-spacing: 1.5px;
+}
+
+.vintage-card:hover svg {
+  transform: scale(1.1) rotate(5deg);
+  color: rgba(201, 162, 39, 1);
+}
+
+.vintage-card svg {
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.vintage-card-title {
+  transition: all 0.4s ease;
+}
+
+/* ============================================
+   HOVER EFFECTS - LINKS
+   ============================================ */
+
+a {
+  transition: all 0.3s ease;
+}
+
+a:hover:not([class*="vintage-btn"]):not([class*="button"]):not([class*="bg-"]) {
+  color: rgba(201, 162, 39, 1);
+}
+
+/* ============================================
+   NAVIGATION ANIMATIONS
+   ============================================ */
+
+nav a {
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+nav a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 1), transparent);
+  transform: translateX(-50%);
+  transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+nav a:hover {
+  color: rgba(201, 162, 39, 1);
+  text-shadow: 0 0 8px rgba(201, 162, 39, 0.3);
+}
+
+nav a:hover::after {
+  width: 100%;
+}
+
+/* ============================================
+   HEADER SCROLL EFFECTS
+   ============================================ */
+
+header {
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+header.scrolled {
+  background-color: rgba(245, 240, 230, 0.95) !important;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(42, 38, 36, 0.1);
+  border-bottom-color: rgba(201, 162, 39, 0.3);
+}
+
+/* ============================================
+   STEP CARDS - Sequential animation
+   ============================================ */
+
+.vintage-step,
+.vintage-card {
+  opacity: 0;
+  animation: vintage-fade-in-up 0.8s ease-out forwards;
+}
+
+.vintage-step:nth-child(1),
+.vintage-card:nth-of-type(1) { animation-delay: 0.1s; }
+.vintage-step:nth-child(2),
+.vintage-card:nth-of-type(2) { animation-delay: 0.2s; }
+.vintage-step:nth-child(3),
+.vintage-card:nth-of-type(3) { animation-delay: 0.3s; }
+.vintage-step:nth-child(4),
+.vintage-card:nth-of-type(4) { animation-delay: 0.4s; }
+.vintage-step:nth-child(5),
+.vintage-card:nth-of-type(5) { animation-delay: 0.5s; }
+.vintage-step:nth-child(6),
+.vintage-card:nth-of-type(6) { animation-delay: 0.6s; }
+
+/* ============================================
+   ICON ANIMATIONS
+   ============================================ */
+
+svg {
+  transition: all 0.3s ease;
+}
+
+.group:hover svg,
+a:hover svg,
+button:hover svg {
+  transform: scale(1.1) translateX(2px);
+}
+
+.arrow-icon {
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+a:hover .arrow-icon,
+button:hover .arrow-icon {
+  transform: translateX(6px);
+}
+
+/* ============================================
+   INPUT FIELD ANIMATIONS
+   ============================================ */
+
+input,
+textarea,
+select {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+input:hover,
+textarea:hover,
+select:hover {
+  border-color: rgba(201, 162, 39, 0.6);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: rgba(201, 162, 39, 1);
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.2);
+  transform: translateY(-1px);
+}
+
+/* ============================================
+   DIVIDER & DECORATIVE ANIMATIONS
+   ============================================ */
+
+.vintage-divider {
+  position: relative;
+  overflow: hidden;
+}
+
+.vintage-divider::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.6), transparent);
+  animation: brass-shimmer 4s ease-in-out infinite;
+}
+
+/* ============================================
+   LIST ITEM HOVER
+   ============================================ */
+
+ul li {
+  transition: all 0.3s ease;
+}
+
+ul li:hover {
+  transform: translateX(6px);
+  color: rgba(201, 162, 39, 1);
+}
+
+ul li:hover svg,
+ul li:hover .bullet {
+  transform: scale(1.2);
+  color: rgba(201, 162, 39, 1);
+}
+
+.bullet {
+  transition: all 0.3s ease;
+}
+
+/* ============================================
+   FOCUS VISIBLE STATES
+   ============================================ */
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid rgba(201, 162, 39, 1);
+  outline-offset: 3px;
+  animation: filament-glow 1.5s ease-in-out;
+}
+
+/* ============================================
+   LOADER ANIMATIONS
+   ============================================ */
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(245, 240, 230, 0.4) 0%,
+    rgba(201, 162, 39, 0.4) 50%,
+    rgba(245, 240, 230, 0.4) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+/* ============================================
+   PARALLAX & SCROLL EFFECTS
+   ============================================ */
+
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s ease;
+}
+
+.scroll-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================
+   HOVER LIFT EFFECT (Generic)
+   ============================================ */
+
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.hover-lift:active {
+  transform: translateY(-2px) scale(0.99);
+}
+
+/* ============================================
+   GLOW EFFECT (Brass glow on hover)
+   ============================================ */
+
+.hover-glow {
+  transition: all 0.3s ease;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(201, 162, 39, 0.4);
+}
+
+/* ============================================
+   SCALE ON HOVER
+   ============================================ */
+
+.hover-scale {
+  transition: transform 0.3s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+.hover-scale:active {
+  transform: scale(0.98);
+}
+
+/* ============================================
+   SCRIPT ACCENT ANIMATIONS
+   ============================================ */
+
+.script-accent {
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.script-accent:hover {
+  transform: scale(1.05);
+  text-shadow: 0 0 12px rgba(201, 162, 39, 0.3);
+}
+
+/* ============================================
+   LINK UNDERLINE GROW
+   ============================================ */
+
+.link-underline {
+  position: relative;
+  display: inline-block;
+  transition: color 0.3s ease;
+}
+
+.link-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: currentColor;
+  transition: width 0.4s ease;
+}
+
+.link-underline:hover::after {
+  width: 100%;
+}
+
+/* ============================================
+   BUTTON RIPPLE EFFECT
+   ============================================ */
+
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+  animation: click-ripple 0.8s ease-out;
+}
+
+/* ============================================
+   STAMP EFFECT (For CTAs and badges)
+   ============================================ */
+
+.stamp-effect {
+  transition: all 0.3s ease;
+}
+
+.stamp-effect:hover {
+  animation: stamp-press 0.4s ease;
+}
+
+/* ============================================
+   BADGE PULSE
+   ============================================ */
+
+.badge-pulse {
+  animation: vintage-pulse 2s ease-in-out infinite;
+}
+
+/* ============================================
+   DECORATIVE FLOURISH ROTATION
+   ============================================ */
+
+.flourish {
+  display: inline-block;
+  transition: transform 0.6s ease;
+}
+
+.flourish:hover {
+  transform: rotate(15deg) scale(1.1);
+}
+
+/* ============================================
+   PAGE LOAD VEIL
+   ============================================ */
+
+.page-veil {
+  animation: vintage-veil 0.8s ease-out;
+}
+
+/* ============================================
+   REDUCED MOTION
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================
+   TYPING CURSOR
+   ============================================ */
+
+@keyframes vintage-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.cursor-blink {
+  animation: vintage-blink 1s infinite;
+}
+
+/* ============================================
+   PARALLAX BG
+   ============================================ */
+
+.parallax-slow {
+  transition: transform 0.3s ease-out;
+}
+
+/* ============================================
+   GLASS EFFECT
+   ============================================ */
+
+.glass-effect {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background-color: rgba(245, 240, 230, 0.7);
+  border: 1px solid rgba(201, 162, 39, 0.2);
+}
+
+/* ============================================
+   LIST BULLET PULSE
+   ============================================ */
+
+@keyframes bullet-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(201, 162, 39, 0.4);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 6px rgba(201, 162, 39, 0);
+  }
+}
+
+.bullet-pulse {
+  animation: bullet-pulse 2s ease-in-out infinite;
+}
+
+/* ============================================
+   FLOATING ANIMATION
+   ============================================ */
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* ============================================
+   HOVER LIFT (Generic for any element)
+   ============================================ */
+
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================
+   BUTTON PRESS EFFECT
+   ============================================ */
+
+.press-effect {
+  transition: transform 0.1s ease;
+}
+
+.press-effect:active {
+  transform: scale(0.95);
+}
+
+/* ============================================
+   GRADIENT SHIFT
+   ============================================ */
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+}

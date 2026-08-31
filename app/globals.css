@@ -1,0 +1,929 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════
+   VINTAGE BARBERSHOP UI — Design System
+   Modern Vintage / Americana Craft
+   navy #1B3A5C · red #E3474F · cream #EDE7DA · paper #FFFFFF
+   Oswald (headings) + Space Mono (body/labels)
+═══════════════════════════════════════════════════════════ */
+@layer base {
+  :root {
+    --navy: #1B3A5C;
+    --navy-deep: #142C46;
+    --red: #E3474F;
+    --red-deep: #C93A42;
+    --cream: #EDE7DA;
+    --paper-warm: #F4F1E9;
+    --body: #5B6472;
+    --muted: #8A93A0;
+    --pole-w: 14px;
+  }
+
+  @media (max-width: 640px) {
+    :root { --pole-w: 10px; }
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--cream);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M24 0H0v24' fill='none' stroke='%231B3A5C' stroke-opacity='0.08'/%3E%3C/svg%3E");
+    color: var(--navy);
+    font-family: var(--font-space-mono), 'Space Mono', 'Courier New', monospace;
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-oswald), 'Oswald', 'Arial Narrow', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: -0.005em;
+    line-height: 1.15;
+    color: var(--navy);
+  }
+
+  p {
+    line-height: 1.75;
+  }
+
+  a {
+    transition: color 180ms ease, opacity 180ms ease;
+  }
+
+  ::selection {
+    background-color: var(--red);
+    color: #ffffff;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ORNAMENTAL UTILITIES
+═══════════════════════════════════════════════════════════ */
+@layer utilities {
+
+  /* ── Barber-pole page frame (persistent brand edge) ──── */
+  .stripe-pole {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: var(--pole-w);
+    z-index: 60;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      45deg,
+      var(--red) 0px, var(--red) 10px,
+      #ffffff 10px, #ffffff 20px,
+      var(--navy) 20px, var(--navy) 30px,
+      #ffffff 30px, #ffffff 40px
+    );
+  }
+  .stripe-pole--left  { left: 0;  border-right: 2px solid var(--navy); }
+  .stripe-pole--right { right: 0; border-left: 2px solid var(--navy); }
+  .pole-gutter {
+    padding-left: var(--pole-w);
+    padding-right: var(--pole-w);
+  }
+
+  /* ── Dashed dividers ─────────────────────────────────── */
+  .divider-brass {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .divider-brass::before,
+  .divider-brass::after {
+    content: '';
+    flex: 1;
+    border-top: 2px dashed rgba(227, 71, 79, 0.7);
+  }
+
+  .divider-double {
+    border: none;
+    border-top: 3px double var(--navy);
+    opacity: 0.5;
+  }
+
+  .rule-brass {
+    height: 0;
+    border: none;
+    border-top: 2px dashed var(--red);
+    opacity: 0.7;
+  }
+  .rule-heavy {
+    height: 4px;
+    background: var(--red);
+    border: none;
+  }
+
+  /* ── Corner ticks (stamp frame corners) ─────────────── */
+  .frame-ornate {
+    position: relative;
+  }
+  .frame-ornate::before,
+  .frame-ornate::after {
+    content: '';
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    border-color: var(--red);
+    border-style: solid;
+    opacity: 0.7;
+  }
+  .frame-ornate::before {
+    top: -6px;
+    left: -6px;
+    border-width: 3px 0 0 3px;
+  }
+  .frame-ornate::after {
+    bottom: -6px;
+    right: -6px;
+    border-width: 0 3px 3px 0;
+  }
+
+  .frame-heavy {
+    position: relative;
+  }
+  .frame-heavy::before,
+  .frame-heavy::after,
+  .frame-heavy > *::before,
+  .frame-heavy > *::after {
+    content: '';
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    border-color: var(--red);
+    border-style: solid;
+    opacity: 0.5;
+  }
+  .frame-heavy::before {
+    top: 20px;
+    left: 20px;
+    border-width: 3px 0 0 3px;
+  }
+  .frame-heavy::after {
+    top: 20px;
+    right: 20px;
+    border-width: 3px 3px 0 0;
+  }
+  .frame-heavy > *::before {
+    bottom: 20px;
+    left: 20px;
+    border-width: 0 0 3px 3px;
+  }
+  .frame-heavy > *::after {
+    bottom: 20px;
+    right: 20px;
+    border-width: 0 3px 3px 0;
+  }
+
+  /* ── Thick navy photo frame ──────────────────────────── */
+  .frame-mirror {
+    position: relative;
+    border: 8px solid var(--navy);
+    background: var(--paper-warm);
+    box-shadow: 10px 10px 0 0 rgba(27, 58, 92, 0.2);
+  }
+  .frame-mirror img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* ── Scrapbook polaroid frame (navy frame + rotation) ── */
+  .frame-polaroid {
+    position: relative;
+    background: #ffffff;
+    padding: 12px 12px 40px;
+    border: 8px solid var(--navy);
+    box-shadow: 8px 8px 0 0 rgba(27, 58, 92, 0.2);
+    transform: rotate(var(--polaroid-rot, -1.5deg));
+    transition: transform 200ms ease, box-shadow 200ms ease;
+  }
+  .frame-polaroid:hover {
+    transform: rotate(0deg) translateY(-4px);
+    box-shadow: 12px 12px 0 0 rgba(227, 71, 79, 0.35);
+    z-index: 10;
+  }
+  .frame-polaroid::after {
+    content: attr(data-caption);
+    position: absolute;
+    bottom: 8px;
+    left: 16px;
+    right: 16px;
+    font-family: var(--font-space-mono), 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--navy);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── Double-frame card border (postage stamp inset) ──── */
+  .border-double-brass {
+    border: 3px solid var(--navy);
+    box-shadow: inset 0 0 0 1px rgba(227, 71, 79, 0.4);
+  }
+
+  /* ── Typography decorations ─────────────────────────── */
+  .heading-underline {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 0.75rem;
+  }
+  .heading-underline::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 0;
+    border-top: 2px dashed var(--red);
+  }
+
+  .heading-center-underline {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 1rem;
+  }
+  .heading-center-underline::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 0;
+    border-top: 2px dashed var(--red);
+  }
+
+  /* Mono eyebrow label (kept legacy class name) */
+  .serif-label {
+    font-family: var(--font-space-mono), 'Space Mono', monospace;
+    font-size: 0.6875rem;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--red);
+  }
+  .mono-label {
+    font-family: var(--font-space-mono), 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--navy);
+    opacity: 0.75;
+  }
+
+  /* Form field label — uppercase mono above underline inputs */
+  .form-label {
+    display: block;
+    font-family: var(--font-space-mono), 'Space Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--navy);
+    opacity: 0.75;
+    margin-bottom: 6px;
+  }
+
+  .italic-accent {
+    font-family: var(--font-space-mono), 'Space Mono', monospace;
+    font-style: italic;
+    color: var(--red);
+  }
+
+  /* ── Speech-bubble badge (red, pointer tail) ─────────── */
+  .badge-bubble {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    background: var(--red);
+    color: #ffffff;
+    font-family: var(--font-space-mono), 'Space Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 7px 16px;
+  }
+  .badge-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 18px;
+    width: 0;
+    height: 0;
+    border-top: 8px solid var(--red);
+    border-right: 9px solid transparent;
+  }
+
+  /* ── Circular red stamp badge ────────────────────────── */
+  .badge-circle {
+    display: grid;
+    place-items: center;
+    text-align: center;
+    width: 84px;
+    height: 84px;
+    border-radius: 9999px;
+    background: var(--red);
+    color: #ffffff;
+    font-family: var(--font-oswald), 'Oswald', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    line-height: 1.25;
+    transform: rotate(-10deg);
+    box-shadow: 3px 3px 0 0 rgba(27, 58, 92, 0.3);
+  }
+
+  /* ── Hover states — flat & fast ─────────────────────── */
+  .hover-lift {
+    transition: transform 180ms ease, box-shadow 180ms ease;
+  }
+  .hover-lift:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0 0 rgba(27, 58, 92, 0.2);
+  }
+
+  .hover-brass {
+    transition: border-color 180ms ease, box-shadow 180ms ease;
+  }
+  .hover-brass:hover {
+    border-color: var(--red);
+  }
+
+  .hover-scale {
+    transition: transform 180ms ease;
+  }
+  .hover-scale:hover {
+    transform: scale(1.02);
+  }
+
+  /* ── Link underline — red dashed ────────────────────── */
+  .hover-underline {
+    position: relative;
+  }
+  .hover-underline::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 0;
+    border-top: 2px dashed var(--red);
+    transition: width 180ms ease;
+  }
+  .hover-underline:hover::after {
+    width: 100%;
+  }
+
+  /* ── Scroll reveal animations ───────────────────────── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 400ms ease, transform 400ms ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-left {
+    opacity: 0;
+    transform: translateX(-30px);
+    transition: opacity 400ms ease, transform 400ms ease;
+  }
+  .reveal-left.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .reveal-right {
+    opacity: 0;
+    transform: translateX(30px);
+    transition: opacity 400ms ease, transform 400ms ease;
+  }
+  .reveal-right.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .reveal-scale {
+    opacity: 0;
+    transform: scale(0.97);
+    transition: opacity 400ms ease, transform 400ms ease;
+  }
+  .reveal-scale.visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .animate-reveal-up {
+    animation: revealUp 0.5s ease forwards;
+  }
+  .animate-fade-in-slow {
+    animation: fadeInSlow 0.6s ease forwards;
+  }
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+  }
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out forwards;
+  }
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease forwards;
+  }
+
+  @keyframes revealUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeInSlow {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.96); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .transition-smooth {
+    transition: all 180ms ease;
+  }
+
+  /* ── Stagger delays ─────────────────────────────────── */
+  .delay-100 { animation-delay: 100ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-400 { animation-delay: 400ms; }
+  .delay-500 { animation-delay: 500ms; }
+  .delay-600 { animation-delay: 600ms; }
+
+  /* ── Image zoom on hover ───────────────────────────── */
+  .img-zoom {
+    overflow: hidden;
+  }
+  .img-zoom img {
+    transition: transform 300ms ease;
+  }
+  .img-zoom:hover img {
+    transform: scale(1.04);
+  }
+
+  /* ── Dashed section divider with stamp diamond ──────── */
+  .section-divider {
+    position: relative;
+    height: 10px;
+    background: transparent;
+  }
+  .section-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 0;
+    border-top: 2px dashed rgba(227, 71, 79, 0.75);
+    transform: translateY(-50%);
+  }
+  .section-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 9px;
+    height: 9px;
+    background: var(--red);
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+  .section-divider--cream::after,
+  .section-divider--parchment::after,
+  .section-divider--slate::after,
+  .section-divider--espresso::after {
+    background: var(--red);
+  }
+
+  /* ── Container ──────────────────────────────────────── */
+  .container-vintage {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-left: clamp(20px, 5vw, 64px);
+    padding-right: clamp(20px, 5vw, 64px);
+  }
+  .container-story {
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+    padding-left: clamp(20px, 5vw, 48px);
+    padding-right: clamp(20px, 5vw, 48px);
+  }
+
+  /* ── Header sticky ──────────────────────────────────── */
+  .header-vintage {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(237, 231, 218, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 3px solid var(--navy);
+    transition: background 180ms ease, box-shadow 180ms ease;
+  }
+  .header-vintage.scrolled {
+    background: rgba(237, 231, 218, 0.98);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   COMPONENT LAYER
+═══════════════════════════════════════════════════════════ */
+@layer components {
+
+  /* ── Buttons — primary CTA: solid red, white mono caps ── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm;
+    font-family: var(--font-space-mono), 'Space Mono', monospace;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: var(--red);
+    color: #ffffff;
+    border: 2px solid var(--red-deep);
+    border-radius: 0;
+    transition: background 180ms ease, transform 180ms ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .btn-primary:hover {
+    background: var(--red-deep);
+  }
+  .btn-primary:active {
+    transform: translateY(1px);
+  }
+
+  /* Notched ticket-edge CTA for hero moments */
+  .btn-ticket {
+    clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 12px 100%, 0 50%);
+    padding: 16px 40px;
+    border: none;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm;
+    font-family: var(--font-space-mono), 'Space Mono', monospace;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: transparent;
+    color: var(--navy);
+    border: 2px solid var(--navy);
+    border-radius: 0;
+    transition: background 180ms ease, color 180ms ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .btn-outline:hover {
+    background: var(--navy);
+    color: #F4F1E9;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm;
+    font-family: var(--font-space-mono), 'Space Mono', monospace;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    color: var(--navy);
+    border-radius: 0;
+    transition: background 180ms ease, color 180ms ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .btn-ghost:hover {
+    background: rgba(27, 58, 92, 0.08);
+    color: var(--red);
+  }
+
+  /* ── Underline-only inputs (signature element) ──────── */
+  .input-heavy {
+    @apply w-full;
+    font-family: var(--font-space-mono), 'Space Mono', monospace;
+    font-size: 0.95rem;
+    padding: 12px 2px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--navy);
+    border-radius: 0;
+    color: var(--navy);
+    transition: border-color 180ms ease;
+    outline: none;
+  }
+  .input-heavy::placeholder {
+    color: var(--muted);
+    opacity: 1;
+  }
+  .input-heavy:focus {
+    border-bottom-color: var(--red);
+    box-shadow: none;
+    outline: none;
+  }
+  .input-heavy.error {
+    border-bottom-color: var(--red-deep);
+  }
+  .input-heavy.success {
+    border-bottom-color: #2F6B4A;
+  }
+  /* Neutralize @tailwindcss/forms box styling when used via shadcn Input */
+  input, textarea, select {
+    border-radius: 0;
+  }
+
+  /* ── Stamp buttons (legacy embossed names, flat now) ── */
+  .btn-embossed {
+    @apply inline-flex items-center justify-center gap-2 px-8 py-4;
+    font-family: var(--font-space-mono), 'Space Mono', monospace;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-radius: 0;
+    border: 2px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 180ms ease, color 180ms ease, border-color 180ms ease, transform 180ms ease;
+  }
+  .btn-embossed:active {
+    transform: translateY(1px);
+  }
+  .btn-embossed-primary {
+    background: var(--red);
+    border-color: var(--red-deep);
+    color: #ffffff;
+  }
+  .btn-embossed-primary:hover {
+    background: var(--red-deep);
+    border-color: var(--red-deep);
+  }
+  .btn-embossed-outline {
+    background: transparent;
+    border-color: #F4F1E9;
+    color: #F4F1E9;
+  }
+  .btn-embossed-outline:hover {
+    background: #F4F1E9;
+    color: var(--navy);
+    border-color: #F4F1E9;
+  }
+
+  /* ── Nav links ──────────────────────────────────────── */
+  .nav-link {
+    font-family: var(--font-space-mono), 'Space Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--navy);
+    transition: color 180ms ease;
+    position: relative;
+  }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    border-top: 2px solid var(--red);
+    transition: width 180ms ease;
+  }
+  .nav-link:hover {
+    color: var(--red);
+  }
+  .nav-link:hover::after {
+    width: 100%;
+  }
+
+  .nav-divider {
+    width: 2px;
+    height: 16px;
+    background: rgba(27, 58, 92, 0.3);
+  }
+
+  /* ── Sidebar panel — postage stamp frame ────────────── */
+  .sidebar-panel {
+    position: relative;
+    background: #ffffff;
+    border: 3px solid var(--navy);
+    border-radius: 0;
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 5px 5px 0 0 rgba(27, 58, 92, 0.14);
+  }
+  .sidebar-panel::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 1px dashed rgba(27, 58, 92, 0.3);
+    pointer-events: none;
+  }
+  .sidebar-panel-header {
+    font-family: var(--font-space-mono), 'Space Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--navy);
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px dashed rgba(227, 71, 79, 0.6);
+    position: relative;
+  }
+
+  .sidebar-rule {
+    position: absolute;
+    left: -24px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--red);
+  }
+
+  /* ── Testimonial — navy plate, mono voice ───────────── */
+  .testimonial-frame {
+    position: relative;
+    background: var(--navy-deep);
+    border: 2px solid rgba(244, 241, 233, 0.35);
+    border-radius: 0;
+    padding: 3rem;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  .testimonial-frame::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border: 1px dashed rgba(227, 71, 79, 0.6);
+    pointer-events: none;
+  }
+  .testimonial-text {
+    font-family: var(--font-space-mono), 'Space Mono', monospace;
+    font-size: clamp(0.95rem, 2vw, 1.1rem);
+    color: #F4F1E9;
+    line-height: 1.8;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+  .testimonial-attribution {
+    font-family: var(--font-oswald), 'Oswald', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--red);
+    position: relative;
+    z-index: 1;
+  }
+  .testimonial-role {
+    font-family: var(--font-space-mono), 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: rgba(244, 241, 233, 0.55);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 0.5rem;
+    position: relative;
+    z-index: 1;
+  }
+  .testimonial-divider {
+    width: 64px;
+    height: 0;
+    border-top: 2px dashed rgba(227, 71, 79, 0.8);
+    margin: 1.5rem auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Cards — postage stamp double frames ────────────── */
+  .card-plaque {
+    position: relative;
+    background: #ffffff;
+    border: 3px solid var(--navy);
+    border-radius: 0;
+    padding: 2.25rem;
+    box-shadow: 5px 5px 0 0 rgba(27, 58, 92, 0.14);
+    transition: transform 180ms ease, box-shadow 180ms ease;
+  }
+  .card-plaque::before {
+    content: '';
+    position: absolute;
+    inset: 9px;
+    border: 1px dashed rgba(227, 71, 79, 0.5);
+    pointer-events: none;
+  }
+  .card-plaque:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0 0 rgba(27, 58, 92, 0.2);
+  }
+
+  .card-leather {
+    position: relative;
+    background: var(--navy-deep);
+    border: 2px solid rgba(244, 241, 233, 0.35);
+    border-radius: 0;
+    padding: 2.5rem;
+    box-shadow: 8px 8px 0 0 rgba(0, 0, 0, 0.25);
+    color: #F4F1E9;
+    transition: transform 180ms ease, box-shadow 180ms ease;
+  }
+  .card-leather::before {
+    content: '';
+    position: absolute;
+    inset: 9px;
+    border: 1px dashed rgba(227, 71, 79, 0.65);
+    pointer-events: none;
+  }
+  .card-leather:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 10px 10px 0 0 rgba(0, 0, 0, 0.3);
+  }
+
+  .card-wood {
+    position: relative;
+    background: #0D1E31;
+    border: 2px solid rgba(244, 241, 233, 0.25);
+    border-radius: 0;
+    padding: 2.5rem;
+    color: #F4F1E9;
+  }
+  .card-wood::before {
+    content: '';
+    position: absolute;
+    inset: 9px;
+    border: 1px dashed rgba(227, 71, 79, 0.5);
+    pointer-events: none;
+  }
+
+  .card-framed {
+    position: relative;
+    background: #ffffff;
+    border: 6px solid var(--navy);
+    border-radius: 0;
+    padding: 2.5rem;
+    box-shadow: 8px 8px 0 0 rgba(27, 58, 92, 0.18);
+    transition: transform 180ms ease, box-shadow 180ms ease;
+  }
+  .card-framed::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border: 1px dashed rgba(227, 71, 79, 0.45);
+    pointer-events: none;
+  }
+  .card-framed:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 11px 11px 0 0 rgba(27, 58, 92, 0.24);
+  }
+
+  footer .footer-link:hover {
+    color: var(--red) !important;
+  }
+
+  /* ── Section wrappers ────────────────────────────────── */
+  .section-parchment {
+    background-color: var(--cream);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M24 0H0v24' fill='none' stroke='%231B3A5C' stroke-opacity='0.08'/%3E%3C/svg%3E");
+  }
+  .section-espresso {
+    background-color: var(--navy);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M24 0H0v24' fill='none' stroke='%23FFFFFF' stroke-opacity='0.06'/%3E%3C/svg%3E");
+  }
+  .section-slate {
+    background-color: var(--navy-deep);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M24 0H0v24' fill='none' stroke='%23FFFFFF' stroke-opacity='0.06'/%3E%3C/svg%3E");
+  }
+  .section-cream {
+    background-color: var(--paper-warm);
+  }
+}

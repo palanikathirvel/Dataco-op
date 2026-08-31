@@ -1,0 +1,539 @@
+/* Vintage Barber-Inspired Theme for DataCoop */
+/* Note: Google Fonts are loaded via next/font/google in layout.tsx */
+/* The @import url for Google Fonts is handled by next/font */
+
+/* Tailwind */
+@import "tailwindcss";
+
+@theme inline {
+  /* Vintage Color Palette */
+  --color-espresso: 220 10% 80%;   /* was 25% dark → now 80% very light grey */
+  --color-tobacco: 30 20% 55%;
+  --color-charcoal: 220 8% 88%;    /* was 35% dark → now 88% very light grey */
+  --color-brass: 45 80% 55%;
+  --color-copper: 25 60% 45%;
+  --color-crimson: 0 75% 40%;
+  --color-parchment: 35 10% 97%;
+  --color-wood: 25 15% 85%;        /* was 30% dark → now 85% very light grey */
+  --color-slate: 220 10% 92%;      /* was 15% very dark → now 92% very light grey */
+
+  /* Grey variants for dark sections */
+  --color-grey-dark: 220 8% 92%;   /* was 25% dark → now 92% very light grey */
+  --color-grey-medium: 220 6% 94%; /* was 40% dark → now 94% very light grey */
+  --color-grey-light: 220 5% 96%;
+
+  /* Vintage Background Colors */
+  --color-vintage-bg: var(--parchment);
+  --color-vintage-bg-dark: var(--charcoal);
+  --color-vintage-accent: var(--brass);
+  --color-vintage-accent-copper: var(--copper);
+  --color-vintage-primary: var(--crimson);
+
+  /* Typography */
+  --font-serif-display: "Playfair Display", serif;
+  --font-serif-body: "Lora", serif;
+  --font-script: "Dancing Script", cursive;
+
+  /* Spacing - Vintage feel */
+  --spacing-vintage: 1.5rem;
+  --spacing-tight: 0.5rem;
+  --spacing-loose: 2.5rem;
+
+  /* Border Width - Heavy Victorian style */
+  --border-vintage: 4px;
+  --border-thin: 1px;
+
+  /* Shadows - Warm, sepia-toned */
+  --shadow-vintage: 0 8px 16px rgba(0, 0, 0, 0.15);
+  --shadow-vintage-inset: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* CSS Variables - Original theme preserved */
+:root {
+  /* Original theme colors preserved */
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+
+  /* Vintage theme overlay */
+  --vintage-primary: 0 65% 45%;
+  --vintage-secondary: 25 30% 50%;
+  --vintage-accent: 45 80% 55%;
+  --vintage-bg: 35 10% 95%;
+  --vintage-border: 10 10% 80%;
+}
+
+.dark {
+  /* Light grey theme - replacing dark tones with very light grey */
+  --background: 220 15% 96%;
+  --foreground: 220 20% 20%;
+  --card: 220 10% 98%;
+  --card-foreground: 220 20% 20%;
+  --popover: 220 10% 98%;
+  --popover-foreground: 220 20% 20%;
+  --primary: 0 65% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 10% 92%;
+  --secondary-foreground: 220 20% 25%;
+  --muted: 220 10% 94%;
+  --muted-foreground: 220 10% 45%;
+  --accent: 220 10% 92%;
+  --accent-foreground: 220 20% 25%;
+  --destructive: 0 65% 35%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 10% 88%;
+  --input: 220 10% 88%;
+  --ring: 0 65% 50%;
+
+  /* Vintage light grey variants */
+  --vintage-primary: 0 70% 55%;
+  --vintage-secondary: 220 10% 88%;
+  --vintage-accent: 45 70% 45%;
+  --vintage-bg: 220 10% 96%;
+  --vintage-border: 220 10% 85%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+  font-feature-settings: "liga" 1, "kern" 1;
+}
+
+/* Vintage Theme Styles */
+.vintage-theme {
+  --background: hsl(var(--vintage-bg));
+  --foreground: hsl(var(--espresso));
+  --primary: hsl(var(--vintage-primary));
+  --primary-foreground: hsl(var(--parchment));
+  --accent: hsl(var(--vintage-accent));
+  --border: hsl(var(--vintage-border));
+  --card: hsl(var(--parchment));
+  --card-foreground: hsl(var(--espresso));
+  --muted: hsl(var(--parchment));
+  --muted-foreground: hsl(var(--charcoal));
+}
+
+/* Grey sections - now very light grey */
+.bg-grey-dark {
+  background-color: hsl(220 8% 92%);
+  color: hsl(220 15% 25%);
+  border-top: 1px solid hsl(220 10% 86%);
+  border-bottom: 1px solid hsl(220 10% 86%);
+}
+
+.bg-grey-medium {
+  background-color: hsl(220 6% 95%);
+  color: hsl(220 15% 25%);
+  border-top: 1px solid hsl(220 10% 88%);
+  border-bottom: 1px solid hsl(220 10% 88%);
+}
+
+.vintage-theme h1,
+.vintage-theme h2,
+.vintage-theme h3,
+.vintage-theme h4,
+.vintage-theme h5,
+.vintage-theme h6 {
+  font-family: "Playfair Display", serif;
+  font-weight: 700;
+}
+
+.vintage-theme p,
+.vintage-theme li,
+.vintage-theme span {
+  font-family: "Lora", serif;
+}
+
+.vintage-theme .script-accent {
+  font-family: "Dancing Script", cursive;
+}
+
+/* Vintage Container */
+.vintage-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .vintage-container {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .vintage-container {
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
+}
+
+/* Vintage Header */
+.vintage-header {
+  background: linear-gradient(135deg, hsl(var(--parchment)) 0%, hsl(var(--vintage-bg)) 100%);
+  border-bottom: 4px solid hsl(var(--vintage-border));
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.vintage-nav-links a {
+  font-family: "Playfair Display", serif;
+  font-weight: 600;
+  color: hsl(var(--charcoal));
+  transition: all 0.3s ease;
+  position: relative;
+  padding: 0.5rem 0;
+}
+
+.vintage-nav-links a:hover,
+.vintage-nav-links a:hover::after {
+  color: hsl(var(--vintage-primary));
+}
+
+.vintage-nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: hsl(var(--vintage-accent));
+  transition: width 0.3s ease;
+}
+
+.vintage-nav-links a:hover::after {
+  width: 100%;
+}
+
+/* Vintage Buttons */
+.vintage-btn {
+  font-family: "Playfair Display", serif;
+  font-weight: 600;
+  border: 2px solid;
+  border-radius: 0;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 0 0 hsl(var(--vintage-accent));
+}
+
+.vintage-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 0 hsl(var(--vintage-accent));
+}
+
+.vintage-btn-primary {
+  background: hsl(var(--vintage-primary));
+  border-color: hsl(var(--vintage-primary));
+  color: hsl(var(--parchment));
+}
+
+.vintage-btn-primary:hover {
+  background: hsl(var(--vintage-accent));
+  color: hsl(var(--espresso));
+}
+
+.vintage-btn-secondary {
+  background: transparent;
+  border-color: hsl(var(--vintage-accent));
+  color: hsl(var(--espresso));
+}
+
+.vintage-btn-secondary:hover {
+  background: hsl(var(--vintage-accent));
+  color: hsl(var(--espresso));
+}
+
+/* Vintage Dividers */
+.vintage-divider {
+  border: 0;
+  height: 4px;
+  width: 60px;
+  background: linear-gradient(90deg, transparent, hsl(var(--vintage-accent)), transparent);
+  margin: 2rem auto;
+}
+
+.vintage-decorative-rule {
+  position: relative;
+  padding: 2rem 0;
+  overflow: hidden;
+}
+
+.vintage-decorative-rule::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  border-top: 1px solid hsl(var(--vintage-border));
+  border-top: 1px solid;
+}
+
+/* Vintage Cards */
+.vintage-card {
+  background: hsl(var(--parchment));
+  border: 3px solid hsl(var(--vintage-border));
+  border-radius: 0;
+  box-shadow: 0 4px 8px rgba(42, 38, 36, 0.1);
+  padding: 2rem;
+  transition: all 0.3s ease;
+  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%, transparent 51%, rgba(255, 255, 255, 0.1) 51%, rgba(255, 255, 255, 0.1) 52%, transparent 53%, transparent 100%);
+}
+
+.vintage-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(42, 38, 36, 0.15);
+  border-color: hsl(var(--vintage-accent));
+}
+
+.vintage-card-header {
+  border-bottom: 1px solid hsl(var(--vintage-border));
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+.vintage-card-title {
+  font-family: "Playfair Display", serif;
+  font-size: 1.75rem;
+  color: hsl(var(--espresso));
+  margin-bottom: 0.5rem;
+  letter-spacing: 1px;
+}
+
+/* Vintage Hero Section */
+.vintage-hero {
+  background: linear-gradient(135deg, hsl(var(--parchment)) 0%, hsl(var(--vintage-bg)) 100%);
+  border: 1px solid hsl(var(--vintage-border));
+  padding: 4rem 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.vintage-hero::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 200px;
+  height: 200px;
+  border: 4px solid hsl(var(--vintage-accent));
+  border-radius: 50%;
+  transform: rotate(45deg);
+  opacity: 0.05;
+}
+
+.vintage-hero h1 {
+  font-family: "Playfair Display", serif;
+  font-size: 3.5rem;
+  line-height: 1.2;
+  color: hsl(var(--espresso));
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Vintage Section */
+.vintage-section {
+  padding: 4rem 0;
+}
+
+.vintage-section:nth-child(even) {
+  background: hsl(var(--vintage-bg));
+}
+
+.vintage-section-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.vintage-section-header h2 {
+  font-family: "Playfair Display", serif;
+  font-size: 2.5rem;
+  color: hsl(var(--espresso));
+  position: relative;
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.vintage-section-header h2::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 2px;
+  background: hsl(var(--vintage-accent));
+}
+
+.vintage-section-header p {
+  font-family: "Lora", serif;
+  font-size: 1.25rem;
+  color: hsl(var(--charcoal));
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Vintage Zig-Zag Layout */
+.vintage-zigzag {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  padding: 2rem 0;
+}
+
+.vintage-zigzag.item-left {
+  order: 1;
+  flex: 1;
+  min-width: 300px;
+}
+
+.vintage-zigzag.item-right {
+  order: 2;
+  flex: 1;
+  min-width: 300px;
+}
+
+@media (min-width: 768px) {
+  .vintage-zigzag.item-left {
+    order: 1;
+  }
+  .vintage-zigzag.item-right {
+    order: 2;
+  }
+  .vintage-zigzag.item-left:nth-child(odd),
+  .vintage-zigzag.item-right:nth-child(odd) {
+    order: 2;
+  }
+  .vintage-zigzag.item-left:nth-child(even),
+  .vintage-zigzag.item-right:nth-child(even) {
+    order: 1;
+  }
+}
+
+/* Vintage Footer - light grey */
+.vintage-footer {
+  background: linear-gradient(135deg, hsl(220 10% 93%) 0%, hsl(220 8% 96%) 100%);
+  color: hsl(220 15% 25%);
+  border-top: 4px solid hsl(var(--vintage-accent));
+  padding: 3rem 0 1.5rem;
+}
+
+.vintage-footer a {
+  color: hsl(220 10% 40%);
+  transition: color 0.3s ease;
+}
+
+.vintage-footer a:hover {
+  color: hsl(var(--vintage-primary));
+  text-shadow: none;
+}
+
+/* Vintage Texture Overlays */
+.vintage-paper-textured::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 10h20M10 0v20' stroke='%23e5e1d8' stroke-width='0.5' opacity='0.3'/%3E%3C/svg%3E");
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.vintage-brass-accent {
+  border-left: 6px solid hsl(var(--vintage-accent));
+  padding-left: 1.5rem;
+  margin: 2rem 0;
+}
+
+/* Vintage Typography Helpers */
+.vintage-title {
+  font-family: "Playfair Display", serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.vintage-title-small {
+  font-family: "Playfair Display",-serif;
+  font-weight: 600;
+  font-size: 1.25rem;
+  letter-spacing: 0.5px;
+}
+
+.vintage-body {
+  font-family: "Lora", serif;
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+}
+
+.vintage-accent-text {
+  font-family: "Playfair Display", serif;
+  font-weight: 600;
+  color: hsl(var(--vintage-primary));
+}
+
+/* Vintage Image Frame */
+.vintage-frame {
+  display: inline-block;
+  border: 4px double hsl(var(--vintage-border));
+  padding: 0.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Vintage Loading Animation */
+.vintage-loading::after {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, hsl(var(--vintage-accent)), transparent);
+  animation: vintage-loading 1.5s ease-in-out infinite;
+}
+
+@keyframes vintage-loading {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Film Grain Effect */
+.film-grain {
+  position: relative;
+  overflow: hidden;
+}
+
+.film-grain::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256'/%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 10;
+}

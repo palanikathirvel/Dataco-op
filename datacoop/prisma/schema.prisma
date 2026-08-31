@@ -1,0 +1,400 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  USER
+  BRAND
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BANNED
+  PENDING_VERIFICATION
+}
+
+enum BrandStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum PurchaseStatus {
+  PENDING_VERIFICATION
+  VERIFIED
+  REJECTED
+}
+
+enum PurchaseMethod {
+  SCREENSHOT
+  EMAIL_FORWARD
+  MANUAL_ENTRY
+}
+
+enum ResearchStatus {
+  DRAFT
+  PENDING_PAYMENT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+enum ResponseStatus {
+  IN_PROGRESS
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  PAID
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REJECTED
+}
+
+enum TransactionType {
+  SURVEY_EARNING
+  PAYOUT
+  BRAND_DEPOSIT
+  BRAND_SPEND
+  PLATFORM_FEE
+  REFUND
+}
+
+enum NotificationType {
+  NEW_SURVEY
+  SURVEY_COMPLETED
+  PAYOUT_PROCESSED
+  BRAND_REGISTRATION
+  RESEARCH_APPROVED
+  LOW_BALANCE
+  PURCHASE_VERIFIED
+  PURCHASE_REJECTED
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String?
+  name            String?
+  phone           String?
+  age             Int?
+  gender          String?
+  city            String?
+  cityTier        String?
+  pincode         String?
+  upiId           String?
+  dpdpConsent     Boolean   @default(false)
+  dpdpConsentAt   DateTime?
+  role            UserRole  @default(USER)
+  status          UserStatus @default(ACTIVE)
+  kycStatus       String    @default("PENDING")
+  emailVerified   DateTime?
+  image           String?
+  googleId        String?   @unique
+  walletBalance   Decimal   @default(0) @db.Decimal(12, 2)
+  totalEarned     Decimal   @default(0) @db.Decimal(12, 2)
+  lastActiveAt    DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  purchases       Purchase[]
+  cohortTags      CohortTag[]
+  responses       SurveyResponse[]
+  payoutRequests  PayoutRequest[]
+  transactions    Transaction[]
+  notifications   Notification[]
+  emailForwarding EmailForwarding?
+  accounts        Account[]
+  sessions        Session[]
+
+  @@index([email])
+  @@index([status])
+}
+
+model Brand {
+  id              String       @id @default(cuid())
+  name            String
+  email           String       @unique
+  passwordHash    String
+  website         String?
+  industry        String?
+  contactPerson   String?
+  contactPhone    String?
+  status          BrandStatus  @default(PENDING_APPROVAL)
+  approvedAt      DateTime?
+  approvedBy      String?
+  walletBalance   Decimal      @default(0) @db.Decimal(12, 2)
+  totalSpent      Decimal      @default(0) @db.Decimal(12, 2)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  researchRequests ResearchRequest[]
+  transactions     Transaction[]
+  notifications    Notification[]
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Purchase {
+  id              String         @id @default(cuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform        String
+  productName     String
+  brand           String?
+  category        String
+  currency        String         @default("INR")
+  amount          Decimal        @db.Decimal(10, 2)
+  orderId         String?
+  purchaseDate    DateTime
+  status          PurchaseStatus @default(PENDING_VERIFICATION)
+  method          PurchaseMethod
+  screenshotUrl   String?
+  screenshotData  String?
+  exifData        Json?
+  perceptualHash  String?
+  verifiedAt      DateTime?
+  verifiedBy      String?
+  rejectReason    String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  verificationQueue VerificationQueue?
+
+  @@index([userId])
+  @@index([status])
+  @@index([category])
+  @@index([platform])
+  @@index([perceptualHash])
+}
+
+model CohortTag {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tag         String
+  confidenceScore Float  @default(1.0)
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, tag])
+  @@index([tag])
+}
+
+model ResearchRequest {
+  id                String         @id @default(cuid())
+  brandId           String
+  brand             Brand          @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  title             String
+  description       String
+  targetCohorts     String[]       // Array of cohort tags
+  sampleSize        Int
+  pricePerResponse  Decimal        @db.Decimal(8, 2)
+  platformFee       Decimal        @db.Decimal(8, 2) @default(0.30)
+  totalBudget       Decimal        @db.Decimal(12, 2)
+  status            ResearchStatus @default(DRAFT)
+  expiresAt         DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  questions         SurveyQuestion[]
+  responses         SurveyResponse[]
+  transactions      Transaction[]
+
+  @@index([brandId])
+  @@index([status])
+}
+
+model SurveyQuestion {
+  id                String   @id @default(cuid())
+  researchRequestId String
+  researchRequest   ResearchRequest @relation(fields: [researchRequestId], references: [id], onDelete: Cascade)
+  type              String   // SINGLE_CHOICE, MULTI_CHOICE, RATING, TEXT, NPS
+  question          String
+  options           String[] // For choice types
+  required          Boolean  @default(true)
+  order             Int
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  answers           SurveyAnswer[]
+
+  @@index([researchRequestId])
+}
+
+model SurveyResponse {
+  id                String         @id @default(cuid())
+  userId            String
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  researchRequestId String
+  researchRequest   ResearchRequest @relation(fields: [researchRequestId], references: [id], onDelete: Cascade)
+  status            ResponseStatus @default(IN_PROGRESS)
+  startedAt         DateTime       @default(now())
+  submittedAt       DateTime?
+  reviewedAt        DateTime?
+  reviewedBy        String?
+  timeSpent         Int?           // Total seconds
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  answers           SurveyAnswer[]
+
+  @@unique([userId, researchRequestId])
+  @@index([userId])
+  @@index([researchRequestId])
+  @@index([status])
+}
+
+model SurveyAnswer {
+  id              String @id @default(cuid())
+  responseId      String
+  response        SurveyResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  questionId      String
+  question        SurveyQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  value           String // JSON string for complex answers
+  timeSpent       Int?   // Seconds spent on this question
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([responseId, questionId])
+}
+
+model PayoutRequest {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount      Decimal      @db.Decimal(10, 2)
+  upiId       String
+  status      PayoutStatus @default(PENDING)
+  razorpayPayoutId String?
+  processedAt DateTime?
+  processedBy String?
+  rejectReason String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Transaction {
+  id              String          @id @default(cuid())
+  userId          String?
+  user            User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  brandId         String?
+  brand           Brand?          @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  researchRequestId String?
+  researchRequest ResearchRequest? @relation(fields: [researchRequestId], references: [id], onDelete: SetNull)
+  type            TransactionType
+  amount          Decimal         @db.Decimal(10, 2)
+  balanceBefore   Decimal         @db.Decimal(12, 2)
+  balanceAfter    Decimal         @db.Decimal(12, 2)
+  description     String
+  razorpayOrderId String?
+  razorpayPaymentId String?
+  metadata        Json?
+  createdAt       DateTime        @default(now())
+
+  @@index([userId])
+  @@index([brandId])
+  @@index([researchRequestId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String?
+  user      User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brandId   String?
+  brand     Brand?           @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+  @@index([brandId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+model EmailForwarding {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email     String   @unique // user-123@upload.datacoop.in
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationQueue {
+  id            String   @id @default(cuid())
+  purchaseId    String   @unique
+  purchase      Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  priority      Int      @default(0)
+  assignedTo    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([priority])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}

@@ -1,0 +1,197 @@
+"use client"
+
+import { useState } from "react"
+import { signIn } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { toast } from "sonner"
+import { Sparkles, Building2, Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+export default function BrandRegisterPage() {
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+    companyName: "",
+    website: "",
+    industry: "",
+  })
+
+  function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
+    setForm((f) => ({ ...f, [key]: value }))
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
+    if (loading) return
+
+    if (!form.email || !form.password || !form.companyName || !form.industry) {
+      toast.error("Please fill in all required fields")
+      return
+    }
+    if (form.password.length < 8) {
+      toast.error("Password must be at least 8 characters")
+      return
+    }
+    if (form.website && !/^https?:\/\//.test(form.website)) {
+      toast.error("Website must start with http:// or https://")
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await fetch("/api/brand/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error || "Registration failed")
+        return
+      }
+      toast.success(
+        "Account created! Your brand is under review. You can log in but features are limited until approval."
+      )
+      router.push("/brand/login")
+    } catch (err) {
+      toast.error("Something went wrong")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-12">
+      <div className="w-full max-w-md">
+        <Link href="/" className="flex items-center justify-center gap-2 mb-8">
+          <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center">
+            <Sparkles className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <span className="font-bold text-xl">DataCo-op</span>
+        </Link>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-primary" />
+              <CardTitle>Brand signup</CardTitle>
+            </div>
+            <CardDescription>
+              Get verified consumer insights from real, transaction-backed buyers.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={submit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="companyName">Company name *</Label>
+                <Input
+                  id="companyName"
+                  placeholder="Nike India"
+                  value={form.companyName}
+                  onChange={(e) => update("companyName", e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Work email *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@company.com"
+                  value={form.email}
+                  onChange={(e) => update("email", e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password *</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="At least 8 characters"
+                  value={form.password}
+                  onChange={(e) => update("password", e.target.value)}
+                  required
+                  minLength={8}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="website">Website</Label>
+                <Input
+                  id="website"
+                  type="url"
+                  placeholder="https://yourcompany.com"
+                  value={form.website}
+                  onChange={(e) => update("website", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="industry">Industry *</Label>
+                <Select
+                  value={form.industry}
+                  onValueChange={(v) => update("industry", v)}
+                >
+                  <SelectTrigger id="industry">
+                    <SelectValue placeholder="Select industry" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="FMCG">FMCG / Consumer Goods</SelectItem>
+                    <SelectItem value="FASHION">Fashion & Apparel</SelectItem>
+                    <SelectItem value="BEAUTY">Beauty & Personal Care</SelectItem>
+                    <SelectItem value="ELECTRONICS">Electronics & Tech</SelectItem>
+                    <SelectItem value="FOOD">Food & Beverage</SelectItem>
+                    <SelectItem value="HEALTH">Health & Wellness</SelectItem>
+                    <SelectItem value="FINANCE">Finance & Fintech</SelectItem>
+                    <SelectItem value="AUTO">Automotive</SelectItem>
+                    <SelectItem value="TRAVEL">Travel & Hospitality</SelectItem>
+                    <SelectItem value="OTHER">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Creating account...
+                  </>
+                ) : (
+                  "Create brand account"
+                )}
+              </Button>
+            </form>
+
+            <div className="mt-6 p-3 rounded-lg bg-muted/50 text-xs text-muted-foreground">
+              Your account will be reviewed within 24 hours. You&apos;ll receive an
+              email once approved.
+            </div>
+
+            <p className="text-sm text-muted-foreground text-center mt-6">
+              Already have an account?{" "}
+              <Link href="/brand/login" className="text-primary hover:underline font-medium">
+                Log in
+              </Link>
+            </p>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              Not a brand?{" "}
+              <Link href="/register" className="text-primary hover:underline">
+                User signup
+              </Link>
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}

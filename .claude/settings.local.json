@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(timeout 15 npx next dev)",
+      "Bash(npx next *)",
+      "Bash(npx prisma *)",
+      "Bash(cd *)"
+    ]
+  }
+}
