@@ -2,39 +2,73 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { ShieldCheck, LayoutDashboard, Users, Building2, ShoppingBag, ClipboardList, DollarSign, ArrowLeftRight } from "lucide-react"
+import {
+  LayoutDashboard,
+  Users,
+  Building2,
+  ShoppingBag,
+  ClipboardList,
+  DollarSign,
+  ArrowLeftRight,
+} from "lucide-react"
+import { Logo } from "@/components/ui/logo"
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions)
   if (!session) redirect("/login")
-  // Admin role check — use the admin-specific login
-  // Check if this is the admin user (by email or role)
   if (session.user.role !== "ADMIN") {
     redirect("/login")
   }
 
+  const navItems = [
+    { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
+    { href: "/admin/users", icon: Users, label: "Users" },
+    { href: "/admin/brands", icon: Building2, label: "Brands" },
+    { href: "/admin/purchases", icon: ShoppingBag, label: "Purchases" },
+    { href: "/admin/research", icon: ClipboardList, label: "Research" },
+    { href: "/admin/payouts", icon: DollarSign, label: "Payouts" },
+    { href: "/admin/transactions", icon: ArrowLeftRight, label: "Transactions" },
+  ]
+
   return (
-    <div className="min-h-screen flex bg-muted/30">
+    <div className="min-h-screen flex flex-col md:flex-row bg-muted/30">
+      {/* Mobile Top Header */}
+      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-background border-b sticky top-0 z-40">
+        <Logo href="/" animated size="xs" subtitle="ADMIN" />
+        <span className="text-[10px] font-mono bg-primary/10 text-primary px-2 py-0.5 rounded font-bold uppercase">
+          Root Console
+        </span>
+      </div>
+
+      {/* Mobile Horizontal Navigation Scroll */}
+      <div className="md:hidden overflow-x-auto whitespace-nowrap px-3 py-2 bg-background border-b flex gap-2">
+        {navItems.map((item) => {
+          const Icon = item.icon
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted"
+            >
+              <Icon className="h-3.5 w-3.5" />
+              <span>{item.label}</span>
+            </Link>
+          )
+        })}
+      </div>
+
+      {/* Desktop Sidebar */}
       <aside className="w-64 shrink-0 border-r bg-background hidden md:flex flex-col">
         <div className="h-16 flex items-center px-6 border-b">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
-              <ShieldCheck className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-bold">DataCo-op</span>
-            <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-mono">Admin</span>
-          </Link>
+          <Logo href="/" animated size="sm" subtitle="ADMIN" />
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
-          <AdminNavItem href="/admin" icon={LayoutDashboard} label="Dashboard" />
-          <AdminNavItem href="/admin/users" icon={Users} label="Users" />
-          <AdminNavItem href="/admin/brands" icon={Building2} label="Brands" />
-          <AdminNavItem href="/admin/purchases" icon={ShoppingBag} label="Purchase verification" />
-          <AdminNavItem href="/admin/research" icon={ClipboardList} label="Research requests" />
-          <AdminNavItem href="/admin/payouts" icon={DollarSign} label="Payout approvals" />
-          <AdminNavItem href="/admin/transactions" icon={ArrowLeftRight} label="Transactions" />
+          {navItems.map((item) => (
+            <AdminNavItem key={item.href} href={item.href} icon={item.icon} label={item.label} />
+          ))}
         </nav>
       </aside>
+
       <main className="flex-1 min-w-0">{children}</main>
     </div>
   )

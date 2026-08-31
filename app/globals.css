@@ -926,4 +926,126 @@
   .section-cream {
     background-color: var(--paper-warm);
   }
+
+  /* ── Animated Logo Keyframes & Utilities ────────────── */
+  @keyframes logoFloat {
+    0%, 100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-5px) rotate(1deg);
+    }
+  }
+
+  @keyframes logoPulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.06);
+    }
+  }
+
+  @keyframes logoGlow {
+    0%, 100% {
+      filter: drop-shadow(0 0 8px rgba(27, 58, 92, 0.35)) drop-shadow(0 0 16px rgba(228, 155, 48, 0.2));
+      opacity: 0.85;
+    }
+    50% {
+      filter: drop-shadow(0 0 16px rgba(27, 58, 92, 0.6)) drop-shadow(0 0 28px rgba(228, 155, 48, 0.45));
+      opacity: 1;
+    }
+  }
+
+  @keyframes logoOrbit {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes logoProgress {
+    0% {
+      transform: translateX(-100%);
+    }
+    50% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes logoShimmer {
+    0% {
+      transform: translateX(-150%) skewX(-20deg);
+    }
+    100% {
+      transform: translateX(250%) skewX(-20deg);
+    }
+  }
+
+  .animate-logo-float {
+    animation: logoFloat 3.5s ease-in-out infinite;
+  }
+
+  .animate-logo-pulse {
+    animation: logoPulse 2.4s ease-in-out infinite;
+  }
+
+  .animate-logo-glow {
+    animation: logoGlow 3s ease-in-out infinite;
+  }
+
+  .animate-logo-orbit {
+    animation: logoOrbit 8s linear infinite;
+  }
+
+  .animate-logo-progress {
+    animation: logoProgress 1.6s ease-in-out infinite;
+  }
+
+  .animate-logo-shimmer {
+    animation: logoShimmer 2.2s infinite linear;
+  }
+
+  @keyframes logoLoadingActive {
+    0%, 100% {
+      transform: translateY(0px) scale(1) rotate(0deg);
+      filter: drop-shadow(0 4px 10px rgba(27, 58, 92, 0.2));
+    }
+    25% {
+      transform: translateY(-8px) scale(1.05) rotate(-2.5deg);
+      filter: drop-shadow(0 12px 20px rgba(227, 71, 79, 0.3));
+    }
+    50% {
+      transform: translateY(0px) scale(0.98) rotate(0deg);
+      filter: drop-shadow(0 4px 10px rgba(27, 58, 92, 0.2));
+    }
+    75% {
+      transform: translateY(-6px) scale(1.04) rotate(2.5deg);
+      filter: drop-shadow(0 10px 18px rgba(27, 58, 92, 0.3));
+    }
+  }
+
+  @keyframes logoScrollTilt {
+    0%, 100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-3px) rotate(3deg);
+    }
+  }
+
+  .animate-logo-loading {
+    animation: logoLoadingActive 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+
+  .animate-logo-scroll {
+    animation: logoScrollTilt 1.2s ease-in-out infinite;
+  }
 }
+
+

@@ -5,11 +5,13 @@ import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { toast } from "sonner"
-import { ShieldCheck, Mail, Lock, Loader2 } from "lucide-react"
+import { Mail, Lock, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Logo } from "@/components/ui/logo"
+import { LogoLoader } from "@/components/ui/logo-loader"
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -61,16 +63,19 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-12">
+      {loading && (
+        <LogoLoader
+          fullScreen
+          size="lg"
+          message="Authenticating Administrator..."
+          submessage="Initializing root security clearance"
+        />
+      )}
+
       <div className="w-full max-w-md">
-        <Link href="/" className="flex items-center justify-center gap-2 mb-8">
-          <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center">
-            <ShieldCheck className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="font-bold text-xl">DataCo-op</span>
-          <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-mono">
-            Admin
-          </span>
-        </Link>
+        <div className="flex items-center justify-center mb-8">
+          <Logo href="/" animated size="lg" subtitle="ADMIN CONSOLE" />
+        </div>
 
         <Card>
           <CardHeader>

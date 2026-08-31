@@ -5,7 +5,7 @@ import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { toast } from "sonner"
-import { Sparkles, Building2, Loader2 } from "lucide-react"
+import { Building2, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,6 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Logo } from "@/components/ui/logo"
+import { LogoLoader } from "@/components/ui/logo-loader"
 
 export default function BrandRegisterPage() {
   const router = useRouter()
@@ -75,13 +77,19 @@ export default function BrandRegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-12">
+      {loading && (
+        <LogoLoader
+          fullScreen
+          size="lg"
+          message="Registering Brand Account..."
+          submessage="Setting up your brand intelligence dashboard"
+        />
+      )}
+
       <div className="w-full max-w-md">
-        <Link href="/" className="flex items-center justify-center gap-2 mb-8">
-          <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center">
-            <Sparkles className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="font-bold text-xl">DataCo-op</span>
-        </Link>
+        <div className="flex items-center justify-center mb-8">
+          <Logo href="/" animated size="lg" subtitle="BRAND PARTNER" />
+        </div>
 
         <Card>
           <CardHeader>
