@@ -50,7 +50,7 @@ export function LogoLoader({
       {/* Brand Title matching site theme */}
       <div className="flex items-center gap-0.5 mb-2 leading-none">
         <span
-          className={cn("font-bold tracking-tight uppercase text-[#1B3A5C] dark:text-[#F4F1E9]", config.text)}
+          className={cn("font-bold tracking-tight uppercase text-[#1B3A5C]", config.text)}
           style={{ fontFamily: "var(--font-oswald), 'Oswald', sans-serif" }}
         >
           DATA
