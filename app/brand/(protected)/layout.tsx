@@ -9,6 +9,7 @@ import {
   BarChart3,
   PlusCircle,
   Wallet,
+  Settings,
   LogOut,
   CheckCircle2,
   XCircle,
@@ -44,6 +45,7 @@ export default async function BrandProtectedLayout({
     { href: "/brand/research", icon: BarChart3, label: "Research" },
     { href: "/brand/research/new", icon: PlusCircle, label: "New Project" },
     { href: "/brand/wallet", icon: Wallet, label: "Wallet" },
+    { href: "/brand/settings", icon: Settings, label: "Settings" },
   ]
 
   return (

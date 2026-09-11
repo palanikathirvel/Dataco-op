@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { formatINR } from "@/lib/utils"
 import { Mail, Phone, MapPin, Calendar, ShieldCheck, User, LogOut, Wallet } from "lucide-react"
 import { ProfileSignOutButton } from "./ProfileSignOutButton"
+import { DeleteAccountButton } from "./DeleteAccountButton"
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions)
@@ -122,10 +123,10 @@ export default async function ProfilePage() {
       </Card>
 
       {/* Session Security & Logout Card */}
-      <Card className="border-destructive/20 bg-card shadow-sm">
+      <Card className="border-border bg-card shadow-sm">
         <CardHeader className="p-4 sm:p-6 pb-3">
           <div className="flex items-center gap-2">
-            <LogOut className="h-5 w-5 text-destructive" />
+            <LogOut className="h-5 w-5 text-muted-foreground" />
             <CardTitle className="text-base sm:text-lg text-foreground">Account Session & Logout</CardTitle>
           </div>
           <CardDescription className="text-xs">
@@ -142,6 +143,29 @@ export default async function ProfilePage() {
             </p>
           </div>
           <ProfileSignOutButton />
+        </CardContent>
+      </Card>
+
+      {/* Danger Zone: Permanent Account Deletion */}
+      <Card className="border-destructive/40 bg-destructive/5 shadow-sm">
+        <CardHeader className="p-4 sm:p-6 pb-3">
+          <CardTitle className="text-base sm:text-lg text-destructive font-bold flex items-center gap-2">
+            Danger Zone
+          </CardTitle>
+          <CardDescription className="text-xs text-destructive/80">
+            Permanently delete your account and all associated data under DPDP compliance rules.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-4 sm:p-6 pt-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold text-foreground">
+              Delete account and purge all personal records
+            </p>
+            <p className="text-[11px] text-muted-foreground max-w-xl">
+              Once deleted, your verified purchase histories, receipts, wallet balances, and cohort tags will be permanently wiped. This action cannot be reversed.
+            </p>
+          </div>
+          <DeleteAccountButton userEmail={user.email} />
         </CardContent>
       </Card>
     </div>
