@@ -13,6 +13,8 @@ import {
 } from "lucide-react"
 import { Logo } from "@/components/ui/logo"
 
+import { AdminSignOutButton } from "./AdminSignOutButton"
+
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions)
   if (!session) redirect("/login")
@@ -35,9 +37,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       {/* Mobile Top Header */}
       <div className="md:hidden flex items-center justify-between px-3.5 sm:px-4 py-2.5 sm:py-3 bg-background border-b sticky top-0 z-40 shadow-sm">
         <Logo href="/" animated size="xs" subtitle="ADMIN CONSOLE" />
-        <span className="text-[10px] font-mono bg-primary/10 text-primary px-2.5 py-0.5 rounded font-bold uppercase border border-primary/20">
-          Root Access
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="hidden xs:inline-block text-[10px] font-mono bg-primary/10 text-primary px-2.5 py-0.5 rounded font-bold uppercase border border-primary/20">
+            Root Access
+          </span>
+          <AdminSignOutButton variant="mobile" />
+        </div>
       </div>
 
       {/* Mobile Horizontal Navigation Scroll */}
@@ -58,15 +63,20 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </div>
 
       {/* Desktop Sidebar */}
-      <aside className="w-64 shrink-0 border-r bg-background hidden md:flex flex-col">
-        <div className="h-16 flex items-center px-6 border-b">
-          <Logo href="/" animated size="sm" subtitle="ADMIN" />
+      <aside className="w-64 shrink-0 border-r bg-background hidden md:flex flex-col justify-between">
+        <div>
+          <div className="h-16 flex items-center px-6 border-b">
+            <Logo href="/" animated size="sm" subtitle="ADMIN" />
+          </div>
+          <nav className="px-3 py-4 space-y-1">
+            {navItems.map((item) => (
+              <AdminNavItem key={item.href} href={item.href} icon={item.icon} label={item.label} />
+            ))}
+          </nav>
         </div>
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          {navItems.map((item) => (
-            <AdminNavItem key={item.href} href={item.href} icon={item.icon} label={item.label} />
-          ))}
-        </nav>
+
+        {/* Bottom Desktop Admin Profile & Sign Out Card */}
+        <AdminSignOutButton variant="desktop" email={session.user.email} />
       </aside>
 
       <main className="flex-1 min-w-0">{children}</main>
