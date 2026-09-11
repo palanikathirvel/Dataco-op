@@ -44,16 +44,16 @@ export default async function AdminDashboardPage() {
   ])
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6 md:p-8 max-w-6xl mx-auto space-y-6 sm:space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1 className="text-xl sm:text-2xl font-bold">Admin Dashboard</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
           Overview of your DataCo-op platform
         </p>
       </div>
 
       {/* Stats */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard
           label="Total users"
           value={totalUsers.toLocaleString()}
@@ -83,12 +83,12 @@ export default async function AdminDashboardPage() {
         />
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Recent users */}
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold">Recent signups</h2>
+              <h2 className="font-semibold text-sm sm:text-base">Recent signups</h2>
               <Badge variant="outline">{totalUsers} total</Badge>
             </div>
             {recentUsers.length === 0 ? (
@@ -96,12 +96,12 @@ export default async function AdminDashboardPage() {
             ) : (
               <div className="space-y-3">
                 {recentUsers.map((u) => (
-                  <div key={u.id} className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">{u.name ?? "—"}</p>
-                      <p className="text-xs text-muted-foreground">{u.email}</p>
+                  <div key={u.id} className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">{u.name ?? "—"}</p>
+                      <p className="text-xs text-muted-foreground truncate">{u.email}</p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <p className="text-xs text-muted-foreground">
                         {new Date(u.createdAt).toLocaleDateString()}
                       </p>
@@ -115,8 +115,8 @@ export default async function AdminDashboardPage() {
 
         {/* Recent transactions */}
         <Card>
-          <CardContent className="p-6">
-            <h2 className="font-semibold mb-4">Recent transactions</h2>
+          <CardContent className="p-4 sm:p-6">
+            <h2 className="font-semibold text-sm sm:text-base mb-4">Recent transactions</h2>
             {recentTransactions.length === 0 ? (
               <p className="text-sm text-muted-foreground">No transactions yet</p>
             ) : (
@@ -124,15 +124,15 @@ export default async function AdminDashboardPage() {
                 {recentTransactions.map((t) => {
                   const incoming = t.type === "BRAND_DEPOSIT"
                   return (
-                    <div key={t.id} className="flex items-center justify-between">
-                      <div className="min-w-0">
+                    <div key={t.id} className="flex items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium truncate">{t.description}</p>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(t.createdAt).toLocaleString()}
+                          {new Date(t.createdAt).toLocaleDateString()}
                         </p>
                       </div>
                       <span
-                        className={`text-sm font-semibold shrink-0 ${
+                        className={`text-sm font-semibold shrink-0 tabular-nums ${
                           incoming ? "text-green-700" : "text-red-700"
                         }`}
                       >

@@ -33,22 +33,22 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-muted/30">
       {/* Mobile Top Header */}
-      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-background border-b sticky top-0 z-40">
-        <Logo href="/" animated size="xs" subtitle="ADMIN" />
-        <span className="text-[10px] font-mono bg-primary/10 text-primary px-2 py-0.5 rounded font-bold uppercase">
-          Root Console
+      <div className="md:hidden flex items-center justify-between px-3.5 sm:px-4 py-2.5 sm:py-3 bg-background border-b sticky top-0 z-40 shadow-sm">
+        <Logo href="/" animated size="xs" subtitle="ADMIN CONSOLE" />
+        <span className="text-[10px] font-mono bg-primary/10 text-primary px-2.5 py-0.5 rounded font-bold uppercase border border-primary/20">
+          Root Access
         </span>
       </div>
 
       {/* Mobile Horizontal Navigation Scroll */}
-      <div className="md:hidden overflow-x-auto whitespace-nowrap px-3 py-2 bg-background border-b flex gap-2">
+      <div className="md:hidden overflow-x-auto no-scrollbar whitespace-nowrap px-3 py-2 bg-background/95 backdrop-blur border-b flex gap-1.5 sticky top-[49px] z-30 shadow-xs">
         {navItems.map((item) => {
           const Icon = item.icon
           return (
             <Link
               key={item.href}
               href={item.href}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted active:scale-95 transition-all shrink-0"
             >
               <Icon className="h-3.5 w-3.5" />
               <span>{item.label}</span>

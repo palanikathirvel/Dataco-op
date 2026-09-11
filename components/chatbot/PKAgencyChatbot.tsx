@@ -50,12 +50,15 @@ export function PKAgencyChatbot() {
   const [leadData, setLeadData] = useState({ name: "", email: "", message: "" })
   const [unreadCount, setUnreadCount] = useState(1)
 
-  // Draggable / Movable Position State
+  // Draggable / Movable & Edge Docking State
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null)
+  const [docked, setDocked] = useState<"left" | "right" | null>(null)
+  const [isHovered, setIsHovered] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const dragInfo = useRef<{ startX: number; startY: number; elemX: number; elemY: number } | null>(null)
   const hasMovedRef = useRef(false)
   const launcherRef = useRef<HTMLDivElement>(null)
+  const currentPosRef = useRef<{ x: number; y: number } | null>(null)
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -115,18 +118,20 @@ export function PKAgencyChatbot() {
       const deltaX = e.clientX - dragInfo.current.startX
       const deltaY = e.clientY - dragInfo.current.startY
 
-      if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
+      if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
         hasMovedRef.current = true
       }
 
       const btnSize = 64
-      const maxX = window.innerWidth - btnSize - 10
+      const maxX = window.innerWidth - btnSize
       const maxY = window.innerHeight - btnSize - 10
 
-      const newX = Math.max(10, Math.min(maxX, dragInfo.current.elemX + deltaX))
+      const newX = Math.max(0, Math.min(maxX, dragInfo.current.elemX + deltaX))
       const newY = Math.max(10, Math.min(maxY, dragInfo.current.elemY + deltaY))
 
-      setPosition({ x: newX, y: newY })
+      const newPos = { x: newX, y: newY }
+      currentPosRef.current = newPos
+      setPosition(newPos)
     },
     [isDragging]
   )
@@ -138,6 +143,26 @@ export function PKAgencyChatbot() {
     try {
       ;(e.target as HTMLElement).releasePointerCapture?.(e.pointerId)
     } catch {}
+
+    const curPos = currentPosRef.current || position
+    const btnSize = 64
+    const winWidth = typeof window !== "undefined" ? window.innerWidth : 800
+
+    // Check if dragged towards screen edge -> dock half circle
+    if (curPos && hasMovedRef.current) {
+      if (curPos.x <= 70) {
+        // Dock to Left edge (50% hidden offscreen)
+        setDocked("left")
+        setPosition({ x: 0, y: curPos.y })
+      } else if (curPos.x >= winWidth - btnSize - 70) {
+        // Dock to Right edge (50% hidden offscreen)
+        setDocked("right")
+        setPosition({ x: winWidth - btnSize, y: curPos.y })
+      } else {
+        // Free floating in middle
+        setDocked(null)
+      }
+    }
 
     // If pointer didn't move significantly, treat as Click / Tap
     if (!hasMovedRef.current) {
@@ -450,30 +475,45 @@ export function PKAgencyChatbot() {
     ])
   }
 
-  // Floating button style: Use custom drag coordinates if moved, else default to bottom-24 right-4 on mobile and bottom-6 right-6 on desktop
+  // Floating button style: Use custom drag coordinates if moved, else default to bottom-20 right-4 on mobile and bottom-6 right-6 on desktop
   const launcherStyle: React.CSSProperties = position
     ? {
         position: "fixed",
-        left: `${position.x}px`,
+        left: docked === "right" ? "auto" : `${position.x}px`,
+        right: docked === "right" ? "0px" : "auto",
         top: `${position.y}px`,
         touchAction: "none",
       }
     : {}
 
+  // Compute docking transform
+  let dockTransform = ""
+  if (docked === "left" && !isDragging && !isOpen && !isHovered) {
+    dockTransform = "-translate-x-1/2 opacity-85"
+  } else if (docked === "right" && !isDragging && !isOpen && !isHovered) {
+    dockTransform = "translate-x-1/2 opacity-85"
+  }
+
   return (
     <>
       {/* ══════════════════════════════════════════════════════════════
-          1. DRAGGABLE / MOVABLE FLOATING LAUNCHER BUTTON
+          1. DRAGGABLE / MOVABLE FLOATING LAUNCHER WITH HALF-CIRCLE DOCKING
       ══════════════════════════════════════════════════════════════ */}
       <div
         ref={launcherRef}
         style={launcherStyle}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         className={`${
-          position ? "" : "fixed bottom-20 md:bottom-6 right-4 sm:right-6"
-        } z-50 flex items-center gap-2.5 select-none touch-none`}
+          position
+            ? ""
+            : "fixed bottom-20 md:bottom-6 right-4 sm:right-6"
+        } z-50 flex items-center ${
+          docked === "left" ? "flex-row-reverse" : "flex-row"
+        } gap-2.5 select-none touch-none transition-all duration-300 ease-out ${dockTransform}`}
       >
-        {/* Tooltip banner when closed */}
-        {!isOpen && !isDragging && (
+        {/* Tooltip banner when closed and not docked */}
+        {!isOpen && !isDragging && !docked && (
           <div
             onClick={handleOpen}
             className="hidden sm:flex items-center gap-2 bg-[#1B3A5C] text-[#F4F1E9] text-xs font-mono font-bold px-3 py-1.5 border-2 border-[#E3474F] shadow-[3px_3px_0_0_#1B3A5C] cursor-pointer hover:bg-[#142C46] transition-transform active:scale-95"
@@ -483,16 +523,24 @@ export function PKAgencyChatbot() {
           </div>
         )}
 
-        {/* Circular Falcon Logo Button (Draggable by user, clean dark border, no plus sign or notification number) */}
+        {/* Circular Falcon Logo Button (Supports dragging, half-circle edge docking, dark circular border) */}
         <div
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
-          className={`relative group h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-white border-3 sm:border-4 border-[#1B3A5C] shadow-[4px_4px_0_0_#1B3A5C] flex items-center justify-center cursor-grab active:cursor-grabbing transition-transform duration-150 overflow-hidden ${
-            isDragging ? "scale-110 shadow-[6px_6px_0_0_#E3474F] ring-4 ring-[#E3474F]/50" : "hover:scale-105"
-          } ${isOpen ? "ring-4 ring-[#E3474F]/40" : ""}`}
-          title="Drag to move, click to chat"
+          className={`relative group h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-white border-3 sm:border-4 border-[#1B3A5C] shadow-[4px_4px_0_0_#1B3A5C] flex items-center justify-center cursor-grab active:cursor-grabbing transition-transform duration-200 overflow-hidden ${
+            isDragging
+              ? "scale-110 shadow-[6px_6px_0_0_#E3474F] ring-4 ring-[#E3474F]/50"
+              : "hover:scale-105"
+          } ${isOpen ? "ring-4 ring-[#E3474F]/40" : ""} ${
+            docked && !isOpen && !isHovered ? "hover:translate-x-0" : ""
+          }`}
+          title={
+            docked
+              ? "Click or hover to expand AI Assistant"
+              : "Drag to edge to minimize half-circle, click to chat"
+          }
         >
           {isOpen ? (
             <X className="h-6 w-6 sm:h-7 sm:w-7 text-[#1B3A5C] pointer-events-none" />
@@ -511,6 +559,15 @@ export function PKAgencyChatbot() {
           <span className="absolute top-1 right-1 h-3 w-3 bg-emerald-500 border-2 border-white rounded-full flex items-center justify-center pointer-events-none">
             <span className="h-1.5 w-1.5 bg-white rounded-full animate-ping opacity-75" />
           </span>
+
+          {/* Docked Pull-out indicator stripe */}
+          {docked && !isDragging && !isOpen && (
+            <div
+              className={`absolute top-0 bottom-0 ${
+                docked === "left" ? "right-0.5 w-1 bg-[#E3474F]" : "left-0.5 w-1 bg-[#E3474F]"
+              } opacity-70`}
+            />
+          )}
         </div>
       </div>
 
@@ -518,7 +575,13 @@ export function PKAgencyChatbot() {
           2. EXPANDABLE CHATBOT DRAWER / WINDOW
       ══════════════════════════════════════════════════════════════ */}
       {isOpen && (
-        <div className="fixed bottom-28 md:bottom-24 right-3 left-3 sm:left-auto sm:right-6 z-50 w-auto sm:w-[410px] h-[520px] max-h-[78vh] bg-white border-3 sm:border-4 border-[#1B3A5C] shadow-[8px_8px_0_0_rgba(27,58,92,0.35)] flex flex-col overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-5 duration-200 rounded-none font-sans">
+        <div
+          className={`fixed bottom-28 md:bottom-24 z-50 w-auto sm:w-[410px] h-[520px] max-h-[78vh] bg-white border-3 sm:border-4 border-[#1B3A5C] shadow-[8px_8px_0_0_rgba(27,58,92,0.35)] flex flex-col overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-5 duration-200 rounded-none font-sans ${
+            docked === "left"
+              ? "left-3 sm:left-6 right-3 sm:right-auto"
+              : "right-3 sm:right-6 left-3 sm:left-auto"
+          }`}
+        >
           
           {/* Barber-Pole Vintage Strip Header */}
           <div

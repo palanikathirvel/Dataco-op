@@ -24,16 +24,16 @@ export default async function AdminPayoutsPage() {
   const completed = payouts.filter((p) => p.status === "COMPLETED")
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 md:p-8 max-w-6xl mx-auto space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Payout approvals</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1 className="text-xl sm:text-2xl font-bold">Payout approvals</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
           Process user withdrawal requests via UPI
         </p>
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
         <SummaryPill label="Pending" count={pending.length} variant="warning" />
         <SummaryPill label="Completed" count={completed.length} variant="success" />
         <SummaryPill
@@ -47,7 +47,7 @@ export default async function AdminPayoutsPage() {
 
       {/* Pending queue */}
       <section>
-        <h2 className="text-lg font-semibold mb-3">Pending ({pending.length})</h2>
+        <h2 className="text-base sm:text-lg font-semibold mb-3">Pending ({pending.length})</h2>
         {pending.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center text-sm text-muted-foreground">
@@ -58,30 +58,30 @@ export default async function AdminPayoutsPage() {
           <div className="space-y-3">
             {pending.map((p) => (
               <Card key={p.id} className="border-yellow-200">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
+                <CardContent className="p-4 sm:p-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-semibold">{p.user?.email}</p>
-                        <Badge variant="pending">Pending</Badge>
+                        <p className="font-semibold text-sm sm:text-base truncate">{p.user?.email}</p>
+                        <Badge variant="pending" className="text-xs">Pending</Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        UPI: <code className="text-xs bg-muted px-1 py-0.5 rounded">{p.upiId}</code>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        UPI: <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono font-medium">{p.upiId}</code>
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         Requested {new Date(p.createdAt).toLocaleString()}
                       </p>
                       {p.user && Number(p.user.walletBalance) < Number(p.amount) && (
-                        <p className="text-xs text-destructive mt-1">
+                        <p className="text-xs text-destructive mt-1 font-medium">
                           Warning: User balance ({formatINR(Number(p.user.walletBalance))}) is less than payout amount ({formatINR(Number(p.amount))})
                         </p>
                       )}
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p className="text-2xl font-bold">{formatINR(p.amount)}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Balance: {p.user ? formatINR(Number(p.user.walletBalance)) : "—"}
+                    <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-0 border-dashed">
+                      <div className="text-left sm:text-right">
+                        <p className="text-xl sm:text-2xl font-bold text-primary">{formatINR(p.amount)}</p>
+                        <p className="text-[11px] sm:text-xs text-muted-foreground">
+                          Bal: {p.user ? formatINR(Number(p.user.walletBalance)) : "—"}
                         </p>
                       </div>
                       <AdminPayoutActions payoutId={p.id} amount={Number(p.amount)} />
@@ -96,16 +96,16 @@ export default async function AdminPayoutsPage() {
 
       {/* Completed */}
       <section>
-        <h2 className="text-lg font-semibold mb-3">Completed ({completed.length})</h2>
+        <h2 className="text-base sm:text-lg font-semibold mb-3">Completed ({completed.length})</h2>
         <Card>
-          <CardContent className="divide-y">
+          <CardContent className="divide-y p-0">
             {completed.length === 0 ? (
               <p className="p-8 text-center text-sm text-muted-foreground">No completed payouts</p>
             ) : (
               completed.slice(0, 20).map((p) => (
-                <div key={p.id} className="flex items-center justify-between p-4">
-                  <div>
-                    <p className="text-sm font-medium">{p.user?.email}</p>
+                <div key={p.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 sm:p-4">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{p.user?.email}</p>
                     <p className="text-xs text-muted-foreground">
                       UPI {p.upiId} • Processed{" "}
                       {p.processedAt
@@ -113,9 +113,9 @@ export default async function AdminPayoutsPage() {
                         : "—"}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Badge variant="success">Completed</Badge>
-                    <span className="text-sm font-semibold">
+                  <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-1.5 sm:pt-0 border-t sm:border-0 border-dashed">
+                    <Badge variant="success" className="text-xs">Completed</Badge>
+                    <span className="text-sm font-semibold tabular-nums">
                       {formatINR(p.amount)}
                     </span>
                   </div>
@@ -139,8 +139,8 @@ function SummaryPill({
   variant: "warning" | "success" | "default"
 }) {
   return (
-    <div className="flex items-center justify-between rounded-lg border bg-card px-4 py-2">
-      <span className="text-sm text-muted-foreground">{label}</span>
+    <div className="flex items-center justify-between rounded-lg border bg-card px-3.5 sm:px-4 py-2">
+      <span className="text-xs sm:text-sm text-muted-foreground">{label}</span>
       <Badge
         variant={
           variant === "success"
