@@ -34,13 +34,88 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        code: { label: "Code", type: "text" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null
+        if (!credentials?.email) return null
+        const cleanEmail = credentials.email.toLowerCase().trim()
+
+        // 1. Passwordless Login with 6-Digit Email OTP Code
+        if (credentials.code && credentials.code.trim().length > 0) {
+          const cleanCode = credentials.code.trim()
+
+          const tokenRecord = await prisma.verificationToken.findFirst({
+            where: {
+              identifier: cleanEmail,
+              token: cleanCode,
+            },
+          })
+
+          if (!tokenRecord) {
+            throw new Error("Invalid login code. Please check your email and try again.")
+          }
+
+          if (new Date() > new Date(tokenRecord.expires)) {
+            await prisma.verificationToken.deleteMany({
+              where: { identifier: cleanEmail },
+            })
+            throw new Error("Login code has expired. Please request a new one.")
+          }
+
+          // Invalidate code after successful usage
+          await prisma.verificationToken.deleteMany({
+            where: { identifier: cleanEmail },
+          })
+
+          // Check Admin table
+          const admin = await prisma.admin.findUnique({
+            where: { email: cleanEmail },
+          })
+          if (admin) {
+            return {
+              id: admin.id,
+              email: admin.email,
+              name: admin.name ?? "Admin",
+              role: "ADMIN",
+            }
+          }
+
+          // Check User table
+          const user = await prisma.user.findUnique({
+            where: { email: cleanEmail },
+          })
+          if (user) {
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name ?? undefined,
+              image: user.image ?? undefined,
+              role: user.role,
+            }
+          }
+
+          // Check Brand table
+          const brand = await prisma.brand.findUnique({
+            where: { email: cleanEmail },
+          })
+          if (brand) {
+            return {
+              id: brand.id,
+              email: brand.email,
+              name: brand.name,
+              role: "BRAND",
+            }
+          }
+
+          throw new Error("No account found for this email address.")
+        }
+
+        // 2. Standard Password Login
+        if (!credentials.password) return null
 
         // Check Admin table first
         const admin = await prisma.admin.findUnique({
-          where: { email: credentials.email },
+          where: { email: cleanEmail },
         })
 
         if (admin?.passwordHash) {
@@ -57,7 +132,7 @@ export const authOptions: NextAuthOptions = {
 
         // Check User table
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email: cleanEmail },
         })
 
         if (user?.passwordHash) {
@@ -75,7 +150,7 @@ export const authOptions: NextAuthOptions = {
 
         // Check Brand table
         const brand = await prisma.brand.findUnique({
-          where: { email: credentials.email },
+          where: { email: cleanEmail },
         })
 
         if (brand?.passwordHash) {

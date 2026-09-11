@@ -80,7 +80,7 @@ export async function sendEmail({ to, subject, html }: EmailOptions) {
 }
 
 /**
- * Send 6-Digit Email Verification Code (OTP)
+ * Send 6-Digit Email Verification Code (OTP) for Signup
  */
 export async function sendVerificationCodeEmail(email: string, code: string) {
   return sendEmail({
@@ -110,17 +110,165 @@ export async function sendVerificationCodeEmail(email: string, code: string) {
             <div class="subtitle">Verified Consumer Data Marketplace</div>
           </div>
           <p style="font-size: 16px; line-height: 1.5; color: #2B2D42;">Hello,</p>
-          <p style="font-size: 15px; line-height: 1.6; color: #4A4E69;">Use the verification code below to confirm your email address. This code will expire in <strong>10 minutes</strong>.</p>
+          <p style="font-size: 15px; line-height: 1.6; color: #4A4E69;">Use the verification code below to verify your email address. This code will expire in <strong>10 minutes</strong>.</p>
           
           <div class="code-box">
             <div class="code">${code}</div>
-            <div class="note">Enter this 6-digit code on the verification screen.</div>
+            <div class="note">Enter this 6-digit code on the registration screen.</div>
           </div>
 
           <p style="font-size: 13px; color: #6b7280; line-height: 1.5;">If you didn't request this code, please safely ignore this email.</p>
           
           <div class="footer">
             &copy; ${new Date().getFullYear()} DataCo-op &bull; India's First Fair-Data Marketplace
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  })
+}
+
+/**
+ * Send 6-Digit Email Login OTP (Passwordless Login)
+ */
+export async function sendLoginOtpEmail(email: string, code: string) {
+  return sendEmail({
+    to: email,
+    subject: `DataCo-op Login Code: ${code}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F8F6F0; margin: 0; padding: 20px; color: #1B3A5C; }
+          .card { max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 2px solid #1B3A5C; padding: 32px; box-shadow: 0 4px 12px rgba(27, 58, 92, 0.08); }
+          .header { text-align: center; border-bottom: 2px solid #EDE7DA; padding-bottom: 20px; margin-bottom: 24px; }
+          .title { font-size: 24px; font-weight: 800; color: #1B3A5C; margin: 0; }
+          .subtitle { font-size: 14px; color: #5C6B73; margin-top: 6px; }
+          .code-box { background: #EBF3FA; border: 2px dashed #1B3A5C; border-radius: 8px; padding: 18px; text-align: center; margin: 28px 0; }
+          .code { font-size: 38px; font-weight: 900; letter-spacing: 8px; color: #1B3A5C; font-family: monospace; }
+          .note { font-size: 13px; color: #5C6B73; text-align: center; margin-top: 8px; }
+          .security-badge { background: #FEF3C7; border-left: 4px solid #D97706; padding: 10px 14px; border-radius: 4px; font-size: 13px; color: #92400E; margin-top: 20px; }
+          .footer { text-align: center; font-size: 12px; color: #9ca3af; margin-top: 32px; border-top: 1px solid #f0f0f0; padding-top: 16px; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="header">
+            <h1 class="title">DataCo-op</h1>
+            <div class="subtitle">Secure One-Time Login Code</div>
+          </div>
+          <p style="font-size: 16px; line-height: 1.5; color: #2B2D42;">Hello,</p>
+          <p style="font-size: 15px; line-height: 1.6; color: #4A4E69;">You requested a passwordless login code for your DataCo-op account. Enter this code to sign in instantly:</p>
+          
+          <div class="code-box">
+            <div class="code">${code}</div>
+            <div class="note">Valid for 10 minutes. Never share this code with anyone.</div>
+          </div>
+
+          <div class="security-badge">
+            <strong>Security Notice:</strong> DataCo-op staff will never ask you for your login code.
+          </div>
+
+          <p style="font-size: 13px; color: #6b7280; line-height: 1.5; margin-top: 24px;">If you did not request this login code, you can ignore this email safely.</p>
+          
+          <div class="footer">
+            &copy; ${new Date().getFullYear()} DataCo-op &bull; India's First Fair-Data Marketplace
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  })
+}
+
+/**
+ * Send Password Reset Code Email
+ */
+export async function sendPasswordResetEmail(email: string, code: string) {
+  return sendEmail({
+    to: email,
+    subject: `Reset your DataCo-op Password: ${code}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F8F6F0; margin: 0; padding: 20px; color: #1B3A5C; }
+          .card { max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 2px solid #1B3A5C; padding: 32px; box-shadow: 0 4px 12px rgba(27, 58, 92, 0.08); }
+          .header { text-align: center; border-bottom: 2px solid #EDE7DA; padding-bottom: 20px; margin-bottom: 24px; }
+          .title { font-size: 24px; font-weight: 800; color: #1B3A5C; margin: 0; }
+          .subtitle { font-size: 14px; color: #5C6B73; margin-top: 6px; }
+          .code-box { background: #FEF2F2; border: 2px dashed #EF4444; border-radius: 8px; padding: 18px; text-align: center; margin: 28px 0; }
+          .code { font-size: 38px; font-weight: 900; letter-spacing: 8px; color: #991B1B; font-family: monospace; }
+          .note { font-size: 13px; color: #991B1B; text-align: center; margin-top: 8px; }
+          .footer { text-align: center; font-size: 12px; color: #9ca3af; margin-top: 32px; border-top: 1px solid #f0f0f0; padding-top: 16px; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="header">
+            <h1 class="title">DataCo-op</h1>
+            <div class="subtitle">Password Reset Request</div>
+          </div>
+          <p style="font-size: 16px; line-height: 1.5; color: #2B2D42;">Hello,</p>
+          <p style="font-size: 15px; line-height: 1.6; color: #4A4E69;">We received a request to reset the password for your account. Use the code below to choose a new password:</p>
+          
+          <div class="code-box">
+            <div class="code">${code}</div>
+            <div class="note">This password reset code will expire in 10 minutes.</div>
+          </div>
+
+          <p style="font-size: 13px; color: #6b7280; line-height: 1.5;">If you did not request a password reset, please change your password immediately or contact our security team.</p>
+          
+          <div class="footer">
+            &copy; ${new Date().getFullYear()} DataCo-op &bull; India's First Fair-Data Marketplace
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  })
+}
+
+/**
+ * Send Password Changed Confirmation Email
+ */
+export async function sendPasswordChangedEmail(email: string, name?: string) {
+  return sendEmail({
+    to: email,
+    subject: `Security Alert: Your DataCo-op Password Was Changed`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F8F6F0; margin: 0; padding: 20px; color: #1B3A5C; }
+          .card { max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 2px solid #1B3A5C; padding: 28px; box-shadow: 0 4px 12px rgba(27, 58, 92, 0.08); }
+          .title { font-size: 20px; font-weight: 800; color: #1B3A5C; margin-top: 0; }
+          .info-box { background: #ECFDF5; border-left: 4px solid #10B981; padding: 12px 16px; border-radius: 4px; margin: 20px 0; font-size: 14px; color: #065F46; }
+          .footer { text-align: center; font-size: 12px; color: #9ca3af; margin-top: 24px; border-top: 1px solid #f0f0f0; padding-top: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <h2 class="title">Password Successfully Changed</h2>
+          <p style="font-size: 14px; color: #4A4E69;">Hi ${name || "there"},</p>
+          <p style="font-size: 14px; color: #4A4E69;">Your DataCo-op account password was successfully updated on <strong>${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST</strong>.</p>
+          
+          <div class="info-box">
+            <strong>Account:</strong> ${email}<br>
+            <strong>Status:</strong> Password Updated
+          </div>
+
+          <p style="font-size: 13px; color: #6b7280;">If you made this change, no further action is needed. If you did NOT change your password, please reset it immediately.</p>
+          
+          <div class="footer">
+            DataCo-op Security Team &bull; ${FROM_EMAIL}
           </div>
         </div>
       </body>

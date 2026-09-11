@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
-import { sendVerificationCodeEmail } from "@/lib/email"
+import {
+  sendVerificationCodeEmail,
+  sendLoginOtpEmail,
+  sendPasswordResetEmail,
+} from "@/lib/email"
 
 export async function POST(req: Request) {
   try {
@@ -12,21 +16,32 @@ export async function POST(req: Request) {
 
     const cleanEmail = email.toLowerCase().trim()
 
-    // If registering, check if account already exists
-    if (type === "register") {
-      const existingUser = await prisma.user.findUnique({
-        where: { email: cleanEmail },
-      })
-      const existingBrand = await prisma.brand.findUnique({
-        where: { email: cleanEmail },
-      })
+    // 1. Check existing accounts in database
+    const existingUser = await prisma.user.findUnique({
+      where: { email: cleanEmail },
+    })
+    const existingBrand = await prisma.brand.findUnique({
+      where: { email: cleanEmail },
+    })
+    const existingAdmin = await prisma.admin.findUnique({
+      where: { email: cleanEmail },
+    })
+    const accountExists = Boolean(existingUser || existingBrand || existingAdmin)
 
-      if (existingUser || existingBrand) {
-        return NextResponse.json(
-          { error: "This email is already registered. Please login instead." },
-          { status: 409 }
-        )
-      }
+    // Registration check: don't allow duplicate registration
+    if (type === "register" && accountExists) {
+      return NextResponse.json(
+        { error: "This email is already registered. Please log in instead." },
+        { status: 409 }
+      )
+    }
+
+    // Login or Password Reset check: account must exist
+    if ((type === "login" || type === "reset-password") && !accountExists) {
+      return NextResponse.json(
+        { error: "No account found with this email. Please create an account first." },
+        { status: 404 }
+      )
     }
 
     // Generate secure 6-digit numeric OTP code
@@ -46,16 +61,28 @@ export async function POST(req: Request) {
       },
     })
 
-    // Send email using Resend
-    const result = await sendVerificationCodeEmail(cleanEmail, code)
+    // Send corresponding email template
+    if (type === "login") {
+      await sendLoginOtpEmail(cleanEmail, code)
+    } else if (type === "reset-password") {
+      await sendPasswordResetEmail(cleanEmail, code)
+    } else {
+      await sendVerificationCodeEmail(cleanEmail, code)
+    }
 
-    console.log(`[VERIFICATION_OTP] Code generated for ${cleanEmail}: ${code}`)
+    console.log(`[AUTH_OTP_SENT] Type: ${type} | Email: ${cleanEmail} | Code: ${code}`)
 
     return NextResponse.json({
       success: true,
-      message: `Verification code sent to ${cleanEmail}`,
-      // For local testing convenience if Resend API key is not yet set
-      devPreview: !process.env.RESEND_API_KEY ? code : undefined,
+      message:
+        type === "login"
+          ? `One-time login code sent to ${cleanEmail}`
+          : type === "reset-password"
+          ? `Password reset code sent to ${cleanEmail}`
+          : `Verification code sent to ${cleanEmail}`,
+      // For local testing convenience if mail credentials are in preview mode
+      devPreview:
+        !process.env.GMAIL_APP_PASSWORD && !process.env.RESEND_API_KEY ? code : undefined,
     })
   } catch (error) {
     console.error("[SEND_CODE_ERROR]", error)
@@ -65,3 +92,4 @@ export async function POST(req: Request) {
     )
   }
 }
+
