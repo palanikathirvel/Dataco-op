@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes"
 import { Toaster } from "sonner"
 import { AuthProvider, QueryProvider } from "./AuthProvider"
 import { ChunkErrorHandler } from "./ChunkErrorHandler"
+import { PKAgencyChatbot } from "@/components/chatbot/PKAgencyChatbot"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -17,8 +18,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <AuthProvider>
           <ChunkErrorHandler />
           {children}
+          <PKAgencyChatbot />
           <Toaster
-            position="bottom-right"
+            position="top-right"
             richColors
             expand={false}
             toastOptions={{
