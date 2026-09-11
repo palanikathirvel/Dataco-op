@@ -12,6 +12,11 @@ export function ChunkErrorHandler() {
           : (error as Error)?.message || (error as { reason?: { message?: string } })?.reason?.message || ""
       const name = (error as Error)?.name || ""
 
+      // Ignore browser extension errors
+      if (message.includes("chrome-extension://") || message.includes("moz-extension://")) {
+        return false
+      }
+
       return (
         name === "ChunkLoadError" ||
         message.includes("ChunkLoadError") ||
