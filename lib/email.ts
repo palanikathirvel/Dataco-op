@@ -456,3 +456,148 @@ export async function sendLoginAlertEmail(email: string, name: string) {
 
   return sendEmail({ to: email, subject, text, html })
 }
+
+/**
+ * 7. Send Contact Form Query to Agency Desk (create.pk.123@gmail.com)
+ */
+export async function sendContactInquiryEmail({
+  name,
+  email,
+  phone,
+  topic,
+  message,
+}: {
+  name: string
+  email: string
+  phone?: string
+  topic: string
+  message: string
+}) {
+  const targetEmail = "create.pk.123@gmail.com"
+  const topicLabels: Record<string, string> = {
+    general: "General Platform Inquiry",
+    brand: "Brand Research & Cohorts",
+    user: "User Earnings & Verified Payouts",
+    agency: "P.K Creative Agency Collaboration",
+    security: "Security & Privacy Protocol",
+  }
+  const topicTitle = topicLabels[topic] || topic || "General Inquiry"
+  const timestamp = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })
+
+  const subject = `[DataCo-op Contact] New Message from ${name} (${topicTitle})`
+  const text = `NEW CONTACT INQUIRY - DATACO-OP / P.K CREATIVE AGENCY\n\nName: ${name}\nEmail: ${email}\nPhone: ${phone || "Not provided"}\nTopic: ${topicTitle}\nTimestamp: ${timestamp} IST\n\nMessage:\n${message}\n\n---\nDataCo-op Official Contact Form Transmission`
+
+  const html = renderEmailShell({
+    preheader: `New contact inquiry received from ${name} (${email}) regarding ${topicTitle}.`,
+    title: "New Contact Inquiry - DataCo-op",
+    children: `
+      <div style="border-bottom: 2px dashed #E3474F; padding-bottom: 12px; margin-bottom: 18px;">
+        <span style="font-family: monospace; font-size: 11px; font-weight: 800; color: #E3474F; text-transform: uppercase; letter-spacing: 1px;">
+          ★ Direct Transmission Received
+        </span>
+        <h2 style="margin: 4px 0 0 0; font-size: 20px; font-weight: 800; color: #1B3A5C;">
+          New Inquiry from ${name}
+        </h2>
+      </div>
+
+      <div style="background-color: #F8F6F0; border: 2px solid #1B3A5C; border-radius: 6px; padding: 16px; margin: 18px 0;">
+        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="4" style="font-size: 13px;">
+          <tr>
+            <td width="35%" style="color: #5B6472; font-family: monospace; font-size: 11px; text-transform: uppercase; font-weight: 700;">Sender Name:</td>
+            <td style="color: #1B3A5C; font-weight: 800;">${name}</td>
+          </tr>
+          <tr>
+            <td style="color: #5B6472; font-family: monospace; font-size: 11px; text-transform: uppercase; font-weight: 700;">Sender Email:</td>
+            <td><a href="mailto:${email}" style="color: #E3474F; font-weight: 700; text-decoration: underline;">${email}</a></td>
+          </tr>
+          ${
+            phone
+              ? `
+          <tr>
+            <td style="color: #5B6472; font-family: monospace; font-size: 11px; text-transform: uppercase; font-weight: 700;">Contact Phone:</td>
+            <td><a href="tel:${phone}" style="color: #1B3A5C; font-weight: 700; text-decoration: none;">${phone}</a></td>
+          </tr>
+          `
+              : ""
+          }
+          <tr>
+            <td style="color: #5B6472; font-family: monospace; font-size: 11px; text-transform: uppercase; font-weight: 700;">Category:</td>
+            <td style="color: #1B3A5C; font-weight: 700;"><span style="background: #1B3A5C; color: #F4F1E9; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-family: monospace;">${topicTitle}</span></td>
+          </tr>
+          <tr>
+            <td style="color: #5B6472; font-family: monospace; font-size: 11px; text-transform: uppercase; font-weight: 700;">Time:</td>
+            <td style="color: #5B6472; font-size: 12px; font-family: monospace;">${timestamp} IST</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="margin: 20px 0 10px 0;">
+        <div style="font-family: monospace; font-size: 11px; font-weight: 800; color: #1B3A5C; text-transform: uppercase; margin-bottom: 6px;">
+          Message Content:
+        </div>
+        <div style="background-color: #FFFFFF; border-left: 4px solid #1B3A5C; border: 1px solid #EDE7DA; border-left-width: 4px; padding: 14px 16px; font-size: 13px; line-height: 1.6; color: #2B2D42; white-space: pre-wrap; font-family: sans-serif;">${message}</div>
+      </div>
+
+      <div style="text-align: center; margin: 24px 0 10px 0;">
+        <a href="mailto:${email}?subject=Re: [DataCo-op] ${encodeURIComponent(topicTitle)}" style="display: inline-block; background-color: #E3474F; color: #ffffff !important; padding: 12px 28px; border-radius: 6px; font-weight: 800; text-decoration: none; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 2px 2px 0px 0px #1B3A5C;">
+          Reply to ${name} &rarr;
+        </a>
+      </div>
+    `,
+  })
+
+  return sendEmail({ to: targetEmail, subject, text, html })
+}
+
+/**
+ * 8. Send Contact Confirmation / Receipt to User
+ */
+export async function sendContactConfirmationEmail({
+  name,
+  email,
+  topic,
+}: {
+  name: string
+  email: string
+  topic: string
+}) {
+  const topicLabels: Record<string, string> = {
+    general: "General Platform Inquiry",
+    brand: "Brand Research & Cohorts",
+    user: "User Earnings & Verified Payouts",
+    agency: "P.K Creative Agency Collaboration",
+    security: "Security & Privacy Protocol",
+  }
+  const topicTitle = topicLabels[topic] || topic || "General Inquiry"
+
+  const subject = `[DataCo-op] We Received Your Message, ${name}!`
+  const text = `Hi ${name},\n\nThank you for reaching out to DataCo-op and P.K Creative Agency regarding "${topicTitle}".\n\nYour message has been received by Palani Kathirvel and the executive desk. We will review your query and respond within 4 business hours.\n\nWarm regards,\nPalani Kathirvel\nP.K Creative Agency & DataCo-op`
+
+  const html = renderEmailShell({
+    preheader: `Thank you for contacting DataCo-op. Palani Kathirvel & team will respond promptly.`,
+    title: "We Received Your Message",
+    children: `
+      <h2 style="margin: 0 0 10px 0; font-size: 20px; font-weight: 800; color: #1B3A5C;">
+        Message Dispatched Successfully! ✉️
+      </h2>
+      <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 1.6; color: #4A4E69;">
+        Hi <strong>${name}</strong>,
+      </p>
+      <p style="margin: 0 0 18px 0; font-size: 14px; line-height: 1.6; color: #4A4E69;">
+        Thank you for getting in touch with <strong>DataCo-op</strong> and <strong>P.K Creative Agency</strong> regarding <em>"${topicTitle}"</em>.
+      </p>
+
+      <div style="background-color: #ECFDF5; border-left: 4px solid #10B981; padding: 14px 16px; border-radius: 4px; margin: 20px 0; font-size: 13px; color: #065F46;">
+        <strong>Status:</strong> Dispatched to Executive Desk (create.pk.123@gmail.com)<br>
+        <strong>Expected Response SLA:</strong> Under 4 business hours<br>
+        <strong>Direct Lead:</strong> Palani Kathirvel (Lead Architect)
+      </div>
+
+      <p style="font-size: 12px; color: #8C98A4; line-height: 1.5; margin: 20px 0 0 0;">
+        If you have urgent questions, you can also reach our platform desk directly at <a href="mailto:create.pk.123@gmail.com" style="color: #E3474F; font-weight: 700;">create.pk.123@gmail.com</a>.
+      </p>
+    `,
+  })
+
+  return sendEmail({ to: email, subject, text, html })
+}

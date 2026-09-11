@@ -51,7 +51,7 @@ export default function ContactPage() {
     setTimeout(() => setCopiedField(null), 2000)
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.name || !form.email || !form.message) {
       toast.error("Please fill in your name, email, and message.")
@@ -59,9 +59,21 @@ export default function ContactPage() {
     }
 
     setSubmitting(true)
-    setTimeout(() => {
-      setSubmitting(false)
-      toast.success("Message dispatched successfully! Palani Kathirvel / P.K Creative Agency will respond promptly.")
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        toast.error(data.error || "Failed to dispatch message. Please try again.")
+        setSubmitting(false)
+        return
+      }
+
+      toast.success("Message dispatched to create.pk.123@gmail.com! Palani Kathirvel / P.K Creative Agency will respond promptly.")
       setForm({
         name: "",
         email: "",
@@ -69,7 +81,11 @@ export default function ContactPage() {
         topic: "general",
         message: "",
       })
-    }, 1000)
+    } catch {
+      toast.error("Network error. Please try again or email create.pk.123@gmail.com directly.")
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -276,16 +292,16 @@ export default function ContactPage() {
                           Creator Email
                         </div>
                         <a
-                          href="mailto:palanikathirvel05@gmail.com"
+                          href="mailto:create.pk.123@gmail.com"
                           className="font-bold text-[#1B3A5C] text-xs sm:text-sm hover:underline truncate block"
                         >
-                          palanikathirvel05@gmail.com
+                          create.pk.123@gmail.com
                         </a>
                       </div>
                     </div>
                     <button
                       type="button"
-                      onClick={() => copyToClipboard("palanikathirvel05@gmail.com", "creator-email")}
+                      onClick={() => copyToClipboard("create.pk.123@gmail.com", "creator-email")}
                       className="p-1.5 hover:bg-white text-[#1B3A5C] transition-colors shrink-0 ml-1"
                       title="Copy Email"
                     >
@@ -337,14 +353,14 @@ export default function ContactPage() {
                     </div>
                     <div className="flex items-center justify-between mt-0.5">
                       <a
-                        href="mailto:datacoop@gmail.com"
+                        href="mailto:create.pk.123@gmail.com"
                         className="font-bold text-[#E49B30] text-xs sm:text-sm hover:underline"
                       >
-                        datacoop@gmail.com
+                        create.pk.123@gmail.com
                       </a>
                       <button
                         type="button"
-                        onClick={() => copyToClipboard("datacoop@gmail.com", "product-email")}
+                        onClick={() => copyToClipboard("create.pk.123@gmail.com", "product-email")}
                         className="p-1 hover:bg-[#1B3A5C] text-[#F4F1E9] transition-colors ml-1"
                         title="Copy Product Email"
                       >
@@ -572,9 +588,9 @@ export default function ContactPage() {
               {
                 title: "Agency & Direct",
                 links: [
-                  ["Palani Kathirvel", "mailto:palanikathirvel05@gmail.com"],
+                  ["Palani Kathirvel", "mailto:create.pk.123@gmail.com"],
                   ["Call: 9342785176", "tel:9342785176"],
-                  ["Platform Desk", "mailto:datacoop@gmail.com"],
+                  ["Platform Desk", "mailto:create.pk.123@gmail.com"],
                 ],
               },
             ].map((col) => (
