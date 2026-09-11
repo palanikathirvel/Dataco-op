@@ -38,16 +38,17 @@ interface EmailOptions {
   subject: string
   html: string
   text?: string
+  replyTo?: string
 }
 
 /**
  * Core Email Dispatcher with Anti-Spam Headers & Embedded Logo Attachment
  */
-export async function sendEmail({ to, subject, html, text }: EmailOptions) {
+export async function sendEmail({ to, subject, html, text, replyTo }: EmailOptions) {
   const cleanTo = to.toLowerCase().trim()
   const user = (process.env.GMAIL_USER || "").replace(/^["']|["']$/g, "").trim()
   const fromName = "DataCo-op"
-  const fromAddress = user || "onboarding@datacoop.in"
+  const fromAddress = user || "create.pk.123@gmail.com"
 
   // Plaintext version (if not provided, strip HTML tags)
   const plainText =
@@ -79,7 +80,7 @@ export async function sendEmail({ to, subject, html, text }: EmailOptions) {
       const info = await transporter.sendMail({
         from: `"${fromName}" <${fromAddress}>`,
         to: cleanTo,
-        replyTo: fromAddress,
+        replyTo: replyTo || fromAddress,
         subject,
         text: plainText,
         html,
@@ -107,6 +108,7 @@ export async function sendEmail({ to, subject, html, text }: EmailOptions) {
       const { data, error } = await resend.emails.send({
         from: `${fromName} <${fromAddress}>`,
         to: cleanTo,
+        reply_to: replyTo || fromAddress,
         subject,
         text: plainText,
         html,
@@ -546,7 +548,7 @@ export async function sendContactInquiryEmail({
     `,
   })
 
-  return sendEmail({ to: targetEmail, subject, text, html })
+  return sendEmail({ to: targetEmail, subject, text, html, replyTo: email })
 }
 
 /**
