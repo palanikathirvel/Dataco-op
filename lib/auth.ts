@@ -169,7 +169,14 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  session: { strategy: "jwt" },
+  secret: process.env.NEXTAUTH_SECRET || "dev-secret-change-in-production-32-chars-minimum",
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   pages: {
     signIn: "/login",
     error: "/login",
@@ -247,6 +254,8 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id
         token.role = user.role ?? "USER"
+        token.email = user.email
+        token.name = user.name
       }
       return token
     },
@@ -254,6 +263,8 @@ export const authOptions: NextAuthOptions = {
       if (token) {
         session.user.id = token.id as string
         session.user.role = token.role as string
+        if (token.email) session.user.email = token.email as string
+        if (token.name) session.user.name = token.name as string
       }
       return session
     },
