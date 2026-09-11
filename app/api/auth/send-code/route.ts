@@ -62,27 +62,37 @@ export async function POST(req: Request) {
     })
 
     // Send corresponding email template
+    let emailResult: { success: boolean; messageId?: string; error?: any } = { success: true }
     if (type === "login") {
-      await sendLoginOtpEmail(cleanEmail, code)
+      emailResult = await sendLoginOtpEmail(cleanEmail, code)
     } else if (type === "reset-password") {
-      await sendPasswordResetEmail(cleanEmail, code)
+      emailResult = await sendPasswordResetEmail(cleanEmail, code)
     } else {
-      await sendVerificationCodeEmail(cleanEmail, code)
+      emailResult = await sendVerificationCodeEmail(cleanEmail, code)
     }
 
-    console.log(`[AUTH_OTP_SENT] Type: ${type} | Email: ${cleanEmail} | Code: ${code}`)
+    console.log(
+      `[AUTH_OTP_SENT] Type: ${type} | Email: ${cleanEmail} | Code: ${code} | Delivered: ${emailResult.success}`
+    )
+
+    if (!emailResult.success) {
+      console.warn(`[EMAIL_NOT_DELIVERED] Email sending failed:`, emailResult.error)
+    }
 
     return NextResponse.json({
       success: true,
-      message:
-        type === "login"
+      message: emailResult.success
+        ? type === "login"
           ? `One-time login code sent to ${cleanEmail}`
           : type === "reset-password"
           ? `Password reset code sent to ${cleanEmail}`
-          : `Verification code sent to ${cleanEmail}`,
-      // For local testing convenience if mail credentials are in preview mode
+          : `Verification code sent to ${cleanEmail}`
+        : `Verification code generated for ${cleanEmail}. (If email takes time to arrive, check spam or use dev code below)`,
+      // Always provide dev preview if email delivery had an issue or in dev environment
       devPreview:
-        !process.env.GMAIL_APP_PASSWORD && !process.env.RESEND_API_KEY ? code : undefined,
+        !emailResult.success || (!process.env.GMAIL_APP_PASSWORD && !process.env.RESEND_API_KEY)
+          ? code
+          : undefined,
     })
   } catch (error) {
     console.error("[SEND_CODE_ERROR]", error)

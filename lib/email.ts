@@ -6,23 +6,39 @@ const FROM_EMAIL =
   (process.env.GMAIL_USER ? `DataCo-op <${process.env.GMAIL_USER}>` : "DataCo-op <onboarding@datacoop.in>")
 const APP_URL = process.env.NEXTAUTH_URL || "http://localhost:3000"
 
-// 1. Gmail SMTP Transporter via Nodemailer (100% Free)
+let cachedTransporter: nodemailer.Transporter | null = null
+
+// 1. Gmail SMTP Transporter via Nodemailer with SSL
 function getMailTransporter() {
-  if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
-    return nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD.replace(/\s+/g, ""), // removes spaces if any
-      },
-    })
+  const user = (process.env.GMAIL_USER || "").trim()
+  const pass = (process.env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, "").trim()
+
+  if (user && pass) {
+    if (!cachedTransporter) {
+      cachedTransporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
+        auth: {
+          user,
+          pass,
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+        pool: true,
+        maxConnections: 5,
+        maxMessages: 100,
+      })
+    }
+    return cachedTransporter
   }
   return null
 }
 
 // 2. Resend Client (Alternative)
 function getResendClient() {
-  const apiKey = process.env.RESEND_API_KEY
+  const apiKey = process.env.RESEND_API_KEY?.trim()
   if (!apiKey) return null
   return new Resend(apiKey)
 }
@@ -34,31 +50,69 @@ interface EmailOptions {
 }
 
 export async function sendEmail({ to, subject, html }: EmailOptions) {
-  // Try Nodemailer (Gmail) first
+  const cleanTo = to.toLowerCase().trim()
+  const user = (process.env.GMAIL_USER || "").trim()
+  const pass = (process.env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, "").trim()
+  const fromName = "DataCo-op"
+  const fromAddress = user || "onboarding@datacoop.in"
+
+  // 1. Try Nodemailer (Gmail) via SSL port 465
   const transporter = getMailTransporter()
-  if (transporter) {
+  if (transporter && user && pass) {
     try {
       const info = await transporter.sendMail({
-        from: FROM_EMAIL,
-        to,
+        from: {
+          name: fromName,
+          address: fromAddress,
+        },
+        to: cleanTo,
         subject,
         html,
       })
-      console.log(`[EMAIL_SENT_NODEMAILER] Sent to ${to}, MessageId: ${info.messageId}`)
+      console.log(`[EMAIL_SENT_NODEMAILER] Successfully sent to ${cleanTo}, MessageId: ${info.messageId}`)
       return { success: true, messageId: info.messageId }
     } catch (error) {
-      console.error("[NODEMAILER_ERROR]", error)
-      return { success: false, error }
+      console.error("[NODEMAILER_ERROR_465]", error)
+
+      // Fallback: Try port 587 with STARTTLS
+      try {
+        const fallbackTransporter = nodemailer.createTransport({
+          host: "smtp.gmail.com",
+          port: 587,
+          secure: false,
+          auth: {
+            user,
+            pass,
+          },
+          tls: {
+            rejectUnauthorized: false,
+          },
+        })
+        const info = await fallbackTransporter.sendMail({
+          from: {
+            name: fromName,
+            address: fromAddress,
+          },
+          to: cleanTo,
+          subject,
+          html,
+        })
+        console.log(`[EMAIL_SENT_NODEMAILER_587] Successfully sent via port 587 to ${cleanTo}, MessageId: ${info.messageId}`)
+        return { success: true, messageId: info.messageId }
+      } catch (fallbackError) {
+        console.error("[NODEMAILER_ERROR_587_FALLBACK]", fallbackError)
+        return { success: false, error: fallbackError }
+      }
     }
   }
 
-  // Next, try Resend
+  // 2. Next, try Resend
   const resend = getResendClient()
   if (resend) {
     try {
       const { data, error } = await resend.emails.send({
-        from: FROM_EMAIL,
-        to,
+        from: `${fromName} <${fromAddress}>`,
+        to: cleanTo,
         subject,
         html,
       })
@@ -66,6 +120,7 @@ export async function sendEmail({ to, subject, html }: EmailOptions) {
         console.error("[RESEND_ERROR]", error)
         return { success: false, error }
       }
+      console.log(`[EMAIL_SENT_RESEND] Sent to ${cleanTo}`)
       return { success: true, data }
     } catch (error) {
       console.error("[RESEND_EXCEPTION]", error)
@@ -74,8 +129,8 @@ export async function sendEmail({ to, subject, html }: EmailOptions) {
   }
 
   // Fallback dev preview if no email credentials configured
-  console.warn("[EMAIL_SERVICE] Neither GMAIL_APP_PASSWORD nor RESEND_API_KEY configured. Preview:")
-  console.log(`To: ${to} | Subject: ${subject}`)
+  console.warn("[EMAIL_SERVICE] No working email credentials. Simulated preview:")
+  console.log(`To: ${cleanTo} | Subject: ${subject}`)
   return { success: false, error: "No email service configured" }
 }
 
