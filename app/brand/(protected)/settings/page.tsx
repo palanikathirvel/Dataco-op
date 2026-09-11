@@ -19,6 +19,7 @@ import {
   AlertTriangle,
 } from "lucide-react"
 import { DeleteBrandAccountButton } from "./DeleteBrandAccountButton"
+import { ProfileFeedbackSection } from "@/components/feedback/ProfileFeedbackSection"
 
 export const metadata = {
   title: "Brand Settings & Profile | DataCo-op",
@@ -155,6 +156,13 @@ export default async function BrandSettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Brand Feedback & Review Section */}
+      <ProfileFeedbackSection
+        userType="brand"
+        userName={brand.name}
+        userCompanyOrLocation={brand.industry || "Brand Partner"}
+      />
 
       {/* Danger Zone */}
       <Card className="border-destructive/40 bg-destructive/5 shadow-sm">

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import {
@@ -18,6 +18,7 @@ import {
   Mail,
   RefreshCw,
   Award,
+  Move,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -49,6 +50,13 @@ export function PKAgencyChatbot() {
   const [leadData, setLeadData] = useState({ name: "", email: "", message: "" })
   const [unreadCount, setUnreadCount] = useState(1)
 
+  // Draggable / Movable Position State
+  const [position, setPosition] = useState<{ x: number; y: number } | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const dragInfo = useRef<{ startX: number; startY: number; elemX: number; elemY: number } | null>(null)
+  const hasMovedRef = useRef(false)
+  const launcherRef = useRef<HTMLDivElement>(null)
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome-1",
@@ -78,10 +86,62 @@ export function PKAgencyChatbot() {
   }, [messages, isOpen, isTyping])
 
   function handleOpen() {
-    setIsOpen(!isOpen)
+    setIsOpen((prev) => !prev)
     if (!hasOpened) {
       setHasOpened(true)
       setUnreadCount(0)
+    }
+  }
+
+  // Pointer events for dragging (Mouse & Touch unified)
+  const handlePointerDown = (e: React.PointerEvent) => {
+    hasMovedRef.current = false
+    const rect = launcherRef.current?.getBoundingClientRect()
+    if (!rect) return
+
+    dragInfo.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      elemX: rect.left,
+      elemY: rect.top,
+    }
+    setIsDragging(true)
+    ;(e.target as HTMLElement).setPointerCapture?.(e.pointerId)
+  }
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!isDragging || !dragInfo.current) return
+      const deltaX = e.clientX - dragInfo.current.startX
+      const deltaY = e.clientY - dragInfo.current.startY
+
+      if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
+        hasMovedRef.current = true
+      }
+
+      const btnSize = 64
+      const maxX = window.innerWidth - btnSize - 10
+      const maxY = window.innerHeight - btnSize - 10
+
+      const newX = Math.max(10, Math.min(maxX, dragInfo.current.elemX + deltaX))
+      const newY = Math.max(10, Math.min(maxY, dragInfo.current.elemY + deltaY))
+
+      setPosition({ x: newX, y: newY })
+    },
+    [isDragging]
+  )
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!isDragging) return
+    setIsDragging(false)
+    dragInfo.current = null
+    try {
+      ;(e.target as HTMLElement).releasePointerCapture?.(e.pointerId)
+    } catch {}
+
+    // If pointer didn't move significantly, treat as Click / Tap
+    if (!hasMovedRef.current) {
+      handleOpen()
     }
   }
 
@@ -130,7 +190,7 @@ export function PKAgencyChatbot() {
     ) {
       return {
         text: `💰 **How Consumers Earn on DataCo-op:**\n\n1. **Upload Receipts:** Upload purchase invoices from Amazon, Flipkart, Swiggy, and Zomato.\n2. **AI OCR Verification:** Our engine extracts and verifies real purchase transactions in under 24 hours.\n3. **Answer Tailored Surveys:** Receive exclusive surveys paying **₹100 to ₹500+** based on verified buying habits.\n4. **Instant Cash:** Rewards are credited straight into your wallet.`,
-        actionLink: { label: "Start Uploading Receipts", href: "/register" },
+        actionLink: { label: "Start Uploading Receipts", href: "/dashboard/purchases/new" },
         options: [
           "⚡ Payout & UPI Rules",
           "🔒 Is my private data safe?",
@@ -231,7 +291,7 @@ export function PKAgencyChatbot() {
     const messageText = (customText || input).trim()
     if (!messageText) return
 
-    // 1. Add user message
+    // Add user message
     const userMsg: Message = {
       id: `user-${Date.now()}`,
       sender: "user",
@@ -358,7 +418,7 @@ export function PKAgencyChatbot() {
       return
     }
 
-    // Regular Bot Query Response (Simulated Thinking Time ~400ms)
+    // Regular Bot Query Response
     setTimeout(() => {
       const response = generateBotResponse(messageText)
       setIsTyping(false)
@@ -390,36 +450,54 @@ export function PKAgencyChatbot() {
     ])
   }
 
+  // Floating button style: Use custom drag coordinates if moved, else default to bottom-24 right-4 on mobile and bottom-6 right-6 on desktop
+  const launcherStyle: React.CSSProperties = position
+    ? {
+        position: "fixed",
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        touchAction: "none",
+      }
+    : {}
+
   return (
     <>
       {/* ══════════════════════════════════════════════════════════════
-          1. FLOATING ACTION LAUNCHER BUTTON (Bottom-Right)
+          1. DRAGGABLE / MOVABLE FLOATING LAUNCHER BUTTON
       ══════════════════════════════════════════════════════════════ */}
-      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex items-center gap-3">
+      <div
+        ref={launcherRef}
+        style={launcherStyle}
+        className={`${
+          position ? "" : "fixed bottom-20 md:bottom-6 right-4 sm:right-6"
+        } z-50 flex items-center gap-2.5 select-none touch-none`}
+      >
         {/* Tooltip banner when closed */}
-        {!isOpen && (
+        {!isOpen && !isDragging && (
           <div
             onClick={handleOpen}
-            className="hidden sm:flex items-center gap-2 bg-[#1B3A5C] text-[#F4F1E9] text-xs font-mono font-bold px-3 py-1.5 border-2 border-[#E3474F] shadow-[3px_3px_0_0_#1B3A5C] cursor-pointer hover:bg-[#142C46] transition-transform active:scale-95 animate-in fade-in slide-in-from-right-2 duration-300"
+            className="hidden sm:flex items-center gap-2 bg-[#1B3A5C] text-[#F4F1E9] text-xs font-mono font-bold px-3 py-1.5 border-2 border-[#E3474F] shadow-[3px_3px_0_0_#1B3A5C] cursor-pointer hover:bg-[#142C46] transition-transform active:scale-95"
           >
             <Sparkles className="h-3.5 w-3.5 text-[#E49B30] animate-pulse" />
             <span>Ask P.K Assistant</span>
           </div>
         )}
 
-        {/* Circular Falcon Logo Button */}
-        <button
-          type="button"
-          onClick={handleOpen}
-          className={`relative group h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-white border-3 border-[#1B3A5C] shadow-[4px_4px_0_0_#1B3A5C] flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 ${
-            isOpen ? "ring-4 ring-[#E3474F]/40" : ""
-          }`}
-          aria-label="Open P.K Agency AI Assistant"
+        {/* Circular Falcon Logo Button (Draggable by user) */}
+        <div
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          className={`relative group h-13 w-13 sm:h-16 sm:w-16 rounded-full bg-white border-3 border-[#1B3A5C] shadow-[4px_4px_0_0_#1B3A5C] flex items-center justify-center cursor-grab active:cursor-grabbing transition-transform duration-150 ${
+            isDragging ? "scale-110 shadow-[6px_6px_0_0_#E3474F] ring-4 ring-[#E3474F]/50" : "hover:scale-105"
+          } ${isOpen ? "ring-4 ring-[#E3474F]/40" : ""}`}
+          title="Drag to move, click to chat"
         >
           {isOpen ? (
-            <X className="h-7 w-7 text-[#1B3A5C] transition-transform duration-200" />
+            <X className="h-6 w-6 sm:h-7 sm:w-7 text-[#1B3A5C] pointer-events-none" />
           ) : (
-            <div className="relative h-10 w-10 sm:h-11 sm:w-11">
+            <div className="relative h-9 w-9 sm:h-11 sm:w-11 pointer-events-none">
               <Image
                 src="/pk-agency-logo.png"
                 alt="P.K Agency AI Assistant"
@@ -429,9 +507,14 @@ export function PKAgencyChatbot() {
             </div>
           )}
 
+          {/* Drag handle icon pill */}
+          <span className="absolute -bottom-1 -right-1 h-5 w-5 bg-[#1B3A5C] text-white rounded-full flex items-center justify-center border border-white opacity-80 group-hover:opacity-100">
+            <Move className="h-2.5 w-2.5 text-[#E49B30]" />
+          </span>
+
           {/* Online green indicator badge */}
-          <span className="absolute top-0 right-0 h-4 w-4 bg-emerald-500 border-2 border-white rounded-full flex items-center justify-center">
-            <span className="h-2 w-2 bg-white rounded-full animate-ping opacity-75" />
+          <span className="absolute top-0 right-0 h-3.5 w-3.5 bg-emerald-500 border-2 border-white rounded-full flex items-center justify-center">
+            <span className="h-1.5 w-1.5 bg-white rounded-full animate-ping opacity-75" />
           </span>
 
           {/* Unread badge */}
@@ -440,14 +523,14 @@ export function PKAgencyChatbot() {
               {unreadCount}
             </span>
           )}
-        </button>
+        </div>
       </div>
 
       {/* ══════════════════════════════════════════════════════════════
           2. EXPANDABLE CHATBOT DRAWER / WINDOW
       ══════════════════════════════════════════════════════════════ */}
       {isOpen && (
-        <div className="fixed bottom-20 right-3 left-3 sm:left-auto sm:right-6 sm:bottom-24 z-50 w-auto sm:w-[410px] h-[540px] max-h-[82vh] bg-white border-3 sm:border-4 border-[#1B3A5C] shadow-[8px_8px_0_0_rgba(27,58,92,0.35)] flex flex-col overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-5 duration-200 rounded-none font-sans">
+        <div className="fixed bottom-28 md:bottom-24 right-3 left-3 sm:left-auto sm:right-6 z-50 w-auto sm:w-[410px] h-[520px] max-h-[78vh] bg-white border-3 sm:border-4 border-[#1B3A5C] shadow-[8px_8px_0_0_rgba(27,58,92,0.35)] flex flex-col overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-5 duration-200 rounded-none font-sans">
           
           {/* Barber-Pole Vintage Strip Header */}
           <div
@@ -662,7 +745,6 @@ export function PKAgencyChatbot() {
 }
 
 function renderFormattedText(text: string) {
-  // Simple markdown parser for bold (**bold**) and bullet lines
   const parts = text.split(/(\*\*.*?\*\*)/g)
   return parts.map((part, index) => {
     if (part.startsWith("**") && part.endsWith("**")) {

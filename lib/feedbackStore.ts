@@ -3,9 +3,12 @@ export interface FeedbackItem {
   name: string
   role: string
   companyOrLocation: string
+  category?: string
   rating: number // 1 to 5
   comment: string
   userType: "customer" | "brand"
+  userId?: string
+  userEmail?: string
   createdAt: string
   isVerified: boolean
 }
@@ -17,6 +20,7 @@ export const INITIAL_FEEDBACKS: FeedbackItem[] = [
     name: "Aakash Verma",
     role: "Verified Consumer",
     companyOrLocation: "Bengaluru, Karnataka",
+    category: "UPI Payout Experience",
     rating: 5,
     comment:
       "I've redeemed over ₹9,200 straight to my Google Pay account. The receipt verification OCR is super fast, and the surveys are actually about products I recently purchased on Amazon and Flipkart.",
@@ -29,6 +33,7 @@ export const INITIAL_FEEDBACKS: FeedbackItem[] = [
     name: "Sneha Mukherjee",
     role: "Brand Growth Lead",
     companyOrLocation: "boAt Lifestyle",
+    category: "Research Quality & Cohorts",
     rating: 5,
     comment:
       "DataCo-op completely changed how we run consumer audio sentiment analysis. Unlike panel survey farms where answers are fabricated, every single respondent here has verified purchase proof.",
@@ -41,6 +46,7 @@ export const INITIAL_FEEDBACKS: FeedbackItem[] = [
     name: "Karthik Subramanian",
     role: "Verified Consumer",
     companyOrLocation: "Chennai, Tamil Nadu",
+    category: "Platform Design & Usability",
     rating: 5,
     comment:
       "Honest data monetization done right. Privacy is respected, receipts are anonymized, and payouts happen without minimum lock-in delays. Highly recommended!",
@@ -53,6 +59,7 @@ export const INITIAL_FEEDBACKS: FeedbackItem[] = [
     name: "Meera Nair",
     role: "Category Marketing Manager",
     companyOrLocation: "Nykaa Beauty Cohort",
+    category: "Survey Tooling & Speed",
     rating: 5,
     comment:
       "Targeting verified buyers who spend ₹5,000+ monthly on premium skincare gave us actionable insights within 48 hours. The ROI on research spend is unmatched.",
@@ -65,6 +72,7 @@ export const INITIAL_FEEDBACKS: FeedbackItem[] = [
     name: "Rohan Dasgupta",
     role: "Verified Consumer",
     companyOrLocation: "Kolkata, West Bengal",
+    category: "Surveys & Earnings",
     rating: 4,
     comment:
       "Great experience overall. Surveys are concise (under 4 minutes) and payments reflect in wallet immediately after submission. Clean UI and easy to use.",
@@ -77,6 +85,7 @@ export const INITIAL_FEEDBACKS: FeedbackItem[] = [
     name: "Vikram Malhotra",
     role: "Product Strategy Lead",
     companyOrLocation: "Cult.fit Wellness",
+    category: "Research Quality & Cohorts",
     rating: 5,
     comment:
       "The zero-party verified data model is the future of market research. We received 500 completed responses from fitness buyers with zero fraud rate.",
@@ -86,24 +95,34 @@ export const INITIAL_FEEDBACKS: FeedbackItem[] = [
   },
 ]
 
-// In-memory feed that persists throughout server runtime
+// Global in-memory feed that persists throughout server runtime
 const globalFeed: FeedbackItem[] = [...INITIAL_FEEDBACKS]
 
-export function getAllFeedbacks(): FeedbackItem[] {
-  return [...globalFeed].sort(
+export function getAllFeedbacks(userTypeFilter?: "customer" | "brand", userIdFilter?: string): FeedbackItem[] {
+  let list = [...globalFeed]
+  if (userTypeFilter) {
+    list = list.filter((f) => f.userType === userTypeFilter)
+  }
+  if (userIdFilter) {
+    list = list.filter((f) => f.userId === userIdFilter)
+  }
+  return list.sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   )
 }
 
 export function addFeedback(data: Omit<FeedbackItem, "id" | "createdAt" | "isVerified">): FeedbackItem {
   const newItem: FeedbackItem = {
-    id: `fb-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+    id: `fb-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
     name: data.name.trim(),
     role: data.role.trim() || (data.userType === "brand" ? "Brand Partner" : "Verified Customer"),
-    companyOrLocation: data.companyOrLocation.trim() || "India",
+    companyOrLocation: data.companyOrLocation?.trim() || "India",
+    category: data.category?.trim() || "General Experience",
     rating: Math.max(1, Math.min(5, data.rating)),
     comment: data.comment.trim(),
     userType: data.userType,
+    userId: data.userId,
+    userEmail: data.userEmail,
     createdAt: new Date().toISOString(),
     isVerified: true,
   }
@@ -111,8 +130,8 @@ export function addFeedback(data: Omit<FeedbackItem, "id" | "createdAt" | "isVer
   return newItem
 }
 
-export function getFeedbackStats() {
-  const all = getAllFeedbacks()
+export function getFeedbackStats(userTypeFilter?: "customer" | "brand") {
+  const all = getAllFeedbacks(userTypeFilter)
   const total = all.length
   const avg =
     total > 0

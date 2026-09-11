@@ -136,14 +136,14 @@ export default function NewPurchasePage() {
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-2xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 md:p-8 max-w-2xl mx-auto space-y-5 sm:space-y-6">
       <div>
-        <Button asChild variant="ghost" size="sm" className="mb-3 -ml-3">
+        <Button asChild variant="ghost" size="sm" className="mb-2 -ml-2">
           <Link href="/dashboard/purchases">
-            <ArrowLeft className="h-4 w-4" /> Back
+            <ArrowLeft className="h-4 w-4 mr-1" /> Back to Purchases
           </Link>
         </Button>
-        <h1 className="text-2xl font-bold">Add a purchase</h1>
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Add a Purchase Receipt</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Upload an order email screenshot or receipt. We verify within 24 hours.
         </p>

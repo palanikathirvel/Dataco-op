@@ -8,6 +8,7 @@ import { formatINR } from "@/lib/utils"
 import { Mail, Phone, MapPin, Calendar, ShieldCheck, User, LogOut, Wallet } from "lucide-react"
 import { ProfileSignOutButton } from "./ProfileSignOutButton"
 import { DeleteAccountButton } from "./DeleteAccountButton"
+import { ProfileFeedbackSection } from "@/components/feedback/ProfileFeedbackSection"
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions)
@@ -121,6 +122,13 @@ export default async function ProfilePage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Feedback & Experience Sharing Section */}
+      <ProfileFeedbackSection
+        userType="customer"
+        userName={user.name ?? ""}
+        userCompanyOrLocation={user.city ? `${user.city}${user.pincode ? `, ${user.pincode}` : ""}` : "India"}
+      />
 
       {/* Session Security & Logout Card */}
       <Card className="border-border bg-card shadow-sm">
