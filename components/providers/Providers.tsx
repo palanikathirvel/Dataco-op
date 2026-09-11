@@ -3,6 +3,7 @@
 import { ThemeProvider } from "next-themes"
 import { Toaster } from "sonner"
 import { AuthProvider, QueryProvider } from "./AuthProvider"
+import { ChunkErrorHandler } from "./ChunkErrorHandler"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -14,6 +15,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     >
       <QueryProvider>
         <AuthProvider>
+          <ChunkErrorHandler />
           {children}
           <Toaster
             position="bottom-right"
