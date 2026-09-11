@@ -1,13 +1,29 @@
+import nodemailer from "nodemailer"
 import { Resend } from "resend"
 
-const FROM_EMAIL = process.env.FROM_EMAIL || "onboarding@datacoop.in"
+const FROM_EMAIL =
+  process.env.FROM_EMAIL ||
+  (process.env.GMAIL_USER ? `DataCo-op <${process.env.GMAIL_USER}>` : "DataCo-op <onboarding@datacoop.in>")
 const APP_URL = process.env.NEXTAUTH_URL || "http://localhost:3000"
 
+// 1. Gmail SMTP Transporter via Nodemailer (100% Free)
+function getMailTransporter() {
+  if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+    return nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD.replace(/\s+/g, ""), // removes spaces if any
+      },
+    })
+  }
+  return null
+}
+
+// 2. Resend Client (Alternative)
 function getResendClient() {
   const apiKey = process.env.RESEND_API_KEY
-  if (!apiKey) {
-    return null
-  }
+  if (!apiKey) return null
   return new Resend(apiKey)
 }
 
@@ -18,31 +34,49 @@ interface EmailOptions {
 }
 
 export async function sendEmail({ to, subject, html }: EmailOptions) {
-  const resend = getResendClient()
-  if (!resend) {
-    console.warn("[EMAIL_SERVICE] RESEND_API_KEY not configured. Email preview logged:")
-    console.log(`To: ${to} | Subject: ${subject}`)
-    return { success: false, error: "RESEND_API_KEY not set" }
-  }
-
-  try {
-    const { data, error } = await resend.emails.send({
-      from: FROM_EMAIL,
-      to,
-      subject,
-      html,
-    })
-
-    if (error) {
-      console.error("[EMAIL_SERVICE_ERROR]", error)
+  // Try Nodemailer (Gmail) first
+  const transporter = getMailTransporter()
+  if (transporter) {
+    try {
+      const info = await transporter.sendMail({
+        from: FROM_EMAIL,
+        to,
+        subject,
+        html,
+      })
+      console.log(`[EMAIL_SENT_NODEMAILER] Sent to ${to}, MessageId: ${info.messageId}`)
+      return { success: true, messageId: info.messageId }
+    } catch (error) {
+      console.error("[NODEMAILER_ERROR]", error)
       return { success: false, error }
     }
-
-    return { success: true, data }
-  } catch (error) {
-    console.error("[EMAIL_SERVICE_EXCEPTION]", error)
-    return { success: false, error }
   }
+
+  // Next, try Resend
+  const resend = getResendClient()
+  if (resend) {
+    try {
+      const { data, error } = await resend.emails.send({
+        from: FROM_EMAIL,
+        to,
+        subject,
+        html,
+      })
+      if (error) {
+        console.error("[RESEND_ERROR]", error)
+        return { success: false, error }
+      }
+      return { success: true, data }
+    } catch (error) {
+      console.error("[RESEND_EXCEPTION]", error)
+      return { success: false, error }
+    }
+  }
+
+  // Fallback dev preview if no email credentials configured
+  console.warn("[EMAIL_SERVICE] Neither GMAIL_APP_PASSWORD nor RESEND_API_KEY configured. Preview:")
+  console.log(`To: ${to} | Subject: ${subject}`)
+  return { success: false, error: "No email service configured" }
 }
 
 /**
@@ -80,7 +114,7 @@ export async function sendVerificationCodeEmail(email: string, code: string) {
           
           <div class="code-box">
             <div class="code">${code}</div>
-            <div class="note">Enter this 6-digit code in the verification screen.</div>
+            <div class="note">Enter this 6-digit code on the verification screen.</div>
           </div>
 
           <p style="font-size: 13px; color: #6b7280; line-height: 1.5;">If you didn't request this code, please safely ignore this email.</p>
