@@ -233,14 +233,14 @@ export default function ContactPage() {
                   </span>
                 </div>
 
-                {/* Agency Eagle Logo with subtle hover animation */}
+                {/* Agency Eagle/Falcon Emblem Logo with subtle hover animation */}
                 <div className="flex flex-col items-center text-center mb-5">
-                  <div className="relative w-44 sm:w-52 h-24 sm:h-28 my-1 transition-transform duration-300 hover:scale-105">
+                  <div className="relative w-32 h-32 sm:w-36 sm:h-36 my-2 p-2 bg-white rounded-xl border-2 border-[#1B3A5C]/15 shadow-md transition-transform duration-300 hover:scale-105">
                     <Image
                       src="/pk-agency-logo.png"
                       alt="P.K Creative Agency Official Logo"
                       fill
-                      className="object-contain filter drop-shadow-[0_4px_10px_rgba(27,58,92,0.25)]"
+                      className="object-contain p-1 filter drop-shadow-[0_4px_12px_rgba(27,58,92,0.18)]"
                       priority
                     />
                   </div>
