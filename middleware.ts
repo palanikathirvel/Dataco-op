@@ -50,6 +50,8 @@ export default withAuth(
           publicPaths.includes(pathname) ||
           pathname.startsWith("/api/auth") ||
           pathname.startsWith("/api/register") ||
+          pathname.startsWith("/api/contact") ||
+          pathname.startsWith("/api/webhooks") ||
           pathname.startsWith("/api/brand") ||
           pathname.startsWith("/api/feedback")
         ) {
