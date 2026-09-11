@@ -232,7 +232,20 @@ export default function RegisterPage() {
       )}
 
       <div className="w-full max-w-md">
-        <div className="flex items-center justify-center mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#1B3A5C] bg-white hover:bg-[#EDE7DA] border border-[#1B3A5C]/20 px-3 py-1.5 rounded-full shadow-xs transition-all hover:-translate-x-0.5"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Go to Home</span>
+          </Link>
+          <span className="text-[11px] font-mono text-[#5C6B73] font-bold uppercase tracking-wider">
+            Consumer Signup
+          </span>
+        </div>
+
+        <div className="flex items-center justify-center mb-6">
           <Logo href="/" animated size="lg" />
         </div>
 

@@ -236,17 +236,19 @@ model EmailForwarding {
 }
 
 model Notification {
-  id        String           @id
-  userId    String?
-  brandId   String?
-  type      NotificationType
-  title     String
-  message   String
-  data      Json?
-  read      Boolean          @default(false)
-  createdAt DateTime         @default(now())
-  Brand     Brand?           @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  User      User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         String           @id @default(uuid())
+  userId     String?
+  brandId    String?
+  type       NotificationType
+  title      String
+  message    String
+  actionUrl  String?
+  senderRole String?          @default("ADMIN")
+  data       Json?
+  read       Boolean          @default(false)
+  createdAt  DateTime         @default(now())
+  Brand      Brand?           @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  User       User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([brandId])
   @@index([createdAt])
@@ -406,6 +408,9 @@ enum NotificationType {
   LOW_BALANCE
   PURCHASE_VERIFIED
   PURCHASE_REJECTED
+  SYSTEM_ANNOUNCEMENT
+  PROMOTION
+  ADMIN_ALERT
 }
 
 enum PurchaseMethod {

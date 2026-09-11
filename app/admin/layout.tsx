@@ -10,8 +10,10 @@ import {
   ClipboardList,
   DollarSign,
   ArrowLeftRight,
+  Megaphone,
 } from "lucide-react"
 import { Logo } from "@/components/ui/logo"
+import { NotificationBell } from "@/components/notifications/NotificationBell"
 
 import { AdminSignOutButton } from "./AdminSignOutButton"
 
@@ -24,6 +26,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const navItems = [
     { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
+    { href: "/admin/notifications", icon: Megaphone, label: "Broadcasts" },
     { href: "/admin/users", icon: Users, label: "Users" },
     { href: "/admin/brands", icon: Building2, label: "Brands" },
     { href: "/admin/purchases", icon: ShoppingBag, label: "Purchases" },
@@ -38,6 +41,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="md:hidden flex items-center justify-between px-3.5 sm:px-4 py-2.5 sm:py-3 bg-background border-b sticky top-0 z-40 shadow-sm">
         <Logo href="/" animated size="xs" subtitle="ADMIN CONSOLE" />
         <div className="flex items-center gap-2">
+          <NotificationBell variant="admin" />
           <span className="hidden xs:inline-block text-[10px] font-mono bg-primary/10 text-primary px-2.5 py-0.5 rounded font-bold uppercase border border-primary/20">
             Root Access
           </span>
@@ -65,8 +69,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       {/* Desktop Sidebar */}
       <aside className="w-64 shrink-0 border-r bg-background hidden md:flex flex-col justify-between">
         <div>
-          <div className="h-16 flex items-center px-6 border-b">
+          <div className="h-16 flex items-center justify-between px-5 border-b">
             <Logo href="/" animated size="sm" subtitle="ADMIN" />
+            <NotificationBell variant="admin" />
           </div>
           <nav className="px-3 py-4 space-y-1">
             {navItems.map((item) => (

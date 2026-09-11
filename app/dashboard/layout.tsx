@@ -11,6 +11,7 @@ import {
   Wallet,
   User,
 } from "lucide-react"
+import { NotificationBell } from "@/components/notifications/NotificationBell"
 import { Logo } from "@/components/ui/logo"
 
 export default async function DashboardLayout({
@@ -44,12 +45,15 @@ export default async function DashboardLayout({
       {/* Mobile Top Header */}
       <div className="md:hidden flex items-center justify-between px-4 py-3 bg-background border-b sticky top-0 z-40">
         <Logo href="/" animated size="xs" />
-        <div className="flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold">
-            {initials}
-          </div>
-          <Link href="/dashboard/profile" className="text-xs font-medium text-foreground">
-            {name.split(" ")[0]}
+        <div className="flex items-center gap-2">
+          <NotificationBell variant="consumer" />
+          <Link href="/dashboard/profile" className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold">
+              {initials}
+            </div>
+            <span className="text-xs font-medium text-foreground">
+              {name.split(" ")[0]}
+            </span>
           </Link>
         </div>
       </div>
@@ -73,9 +77,10 @@ export default async function DashboardLayout({
 
       {/* Desktop Sidebar */}
       <aside className="w-64 shrink-0 border-r bg-background hidden md:flex flex-col">
-        {/* Logo */}
-        <div className="h-16 flex items-center px-6 border-b">
+        {/* Logo & Notification Bell */}
+        <div className="h-16 flex items-center justify-between px-5 border-b">
           <Logo href="/" animated size="sm" />
+          <NotificationBell variant="consumer" />
         </div>
 
         {/* Nav */}

@@ -5,7 +5,7 @@ import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { toast } from "sonner"
-import { Building2, Loader2, Mail, Lock } from "lucide-react"
+import { Building2, Loader2, Mail, Lock, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -78,7 +78,20 @@ export default function BrandLoginPage() {
       )}
 
       <div className="w-full max-w-md">
-        <div className="flex items-center justify-center mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground bg-background hover:bg-muted border px-3 py-1.5 rounded-full shadow-xs transition-all hover:-translate-x-0.5"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Go to Home</span>
+          </Link>
+          <span className="text-[10px] font-mono bg-primary/10 text-primary px-2.5 py-0.5 rounded font-bold uppercase border border-primary/20">
+            Enterprise Portal
+          </span>
+        </div>
+
+        <div className="flex items-center justify-center mb-6">
           <Logo href="/" animated size="lg" subtitle="BRAND PARTNER" />
         </div>
 

@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Logo } from "@/components/ui/logo"
+import { NotificationBell } from "@/components/notifications/NotificationBell"
 
 export default async function BrandProtectedLayout({
   children,
@@ -54,6 +55,7 @@ export default async function BrandProtectedLayout({
       <div className="md:hidden flex items-center justify-between px-4 py-3 bg-background border-b sticky top-0 z-40">
         <Logo href="/" animated size="xs" subtitle="BRAND" />
         <div className="flex items-center gap-2">
+          <NotificationBell variant="brand" />
           <Badge
             variant={isApproved ? "success" : "warning"}
             className="text-[10px] py-0 px-1.5"
@@ -83,8 +85,9 @@ export default async function BrandProtectedLayout({
 
       {/* Desktop Sidebar */}
       <aside className="w-64 shrink-0 border-r bg-background hidden md:flex flex-col">
-        <div className="h-16 flex items-center px-6 border-b">
+        <div className="h-16 flex items-center justify-between px-5 border-b">
           <Logo href="/" animated size="sm" subtitle="BRAND" />
+          <NotificationBell variant="brand" />
         </div>
 
         {/* Approval notice */}

@@ -5,7 +5,7 @@ import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { toast } from "sonner"
-import { Building2, Loader2 } from "lucide-react"
+import { Building2, Loader2, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -24,11 +24,13 @@ export default function BrandRegisterPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
+    companyName: "",
     email: "",
     password: "",
-    companyName: "",
     website: "",
     industry: "",
+    contactPerson: "",
+    contactPhone: "",
   })
 
   function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
@@ -37,21 +39,10 @@ export default function BrandRegisterPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (loading) return
-
-    if (!form.email || !form.password || !form.companyName || !form.industry) {
-      toast.error("Please fill in all required fields")
+    if (!form.companyName || !form.email || !form.password || !form.industry) {
+      toast.error("Please fill all required fields")
       return
     }
-    if (form.password.length < 8) {
-      toast.error("Password must be at least 8 characters")
-      return
-    }
-    if (form.website && !/^https?:\/\//.test(form.website)) {
-      toast.error("Website must start with http:// or https://")
-      return
-    }
-
     setLoading(true)
     try {
       const res = await fetch("/api/brand/register", {
@@ -64,11 +55,24 @@ export default function BrandRegisterPage() {
         toast.error(data.error || "Registration failed")
         return
       }
-      toast.success(
-        "Account created! Your brand is under review. You can log in but features are limited until approval."
-      )
-      router.push("/brand/login")
-    } catch (err) {
+
+      // Auto sign-in
+      const signInRes = await signIn("credentials", {
+        email: form.email,
+        password: form.password,
+        redirect: false,
+      })
+
+      if (signInRes?.error) {
+        toast.success("Account created! Please log in.")
+        router.push("/brand/login")
+        return
+      }
+
+      toast.success("Brand account created! Pending approval.")
+      router.push("/brand/dashboard")
+      router.refresh()
+    } catch {
       toast.error("Something went wrong")
     } finally {
       setLoading(false)
@@ -87,7 +91,20 @@ export default function BrandRegisterPage() {
       )}
 
       <div className="w-full max-w-md">
-        <div className="flex items-center justify-center mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground bg-background hover:bg-muted border px-3 py-1.5 rounded-full shadow-xs transition-all hover:-translate-x-0.5"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Go to Home</span>
+          </Link>
+          <span className="text-[10px] font-mono bg-primary/10 text-primary px-2.5 py-0.5 rounded font-bold uppercase border border-primary/20">
+            Enterprise Onboarding
+          </span>
+        </div>
+
+        <div className="flex items-center justify-center mb-6">
           <Logo href="/" animated size="lg" subtitle="BRAND PARTNER" />
         </div>
 
