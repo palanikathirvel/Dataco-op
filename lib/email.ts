@@ -1,44 +1,32 @@
 import nodemailer from "nodemailer"
 import { Resend } from "resend"
 
-const FROM_EMAIL =
-  process.env.FROM_EMAIL ||
-  (process.env.GMAIL_USER ? `DataCo-op <${process.env.GMAIL_USER}>` : "DataCo-op <onboarding@datacoop.in>")
 const APP_URL = process.env.NEXTAUTH_URL || "http://localhost:3000"
 
-let cachedTransporter: nodemailer.Transporter | null = null
-
-// 1. Gmail SMTP Transporter via Nodemailer with SSL
+/**
+ * 1. Gmail SMTP Transporter
+ */
 function getMailTransporter() {
-  const user = (process.env.GMAIL_USER || "").trim()
-  const pass = (process.env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, "").trim()
+  const user = (process.env.GMAIL_USER || "").replace(/^["']|["']$/g, "").trim()
+  const pass = (process.env.GMAIL_APP_PASSWORD || "").replace(/["'\s]/g, "").trim()
 
   if (user && pass) {
-    if (!cachedTransporter) {
-      cachedTransporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 465,
-        secure: true,
-        auth: {
-          user,
-          pass,
-        },
-        tls: {
-          rejectUnauthorized: false,
-        },
-        pool: true,
-        maxConnections: 5,
-        maxMessages: 100,
-      })
-    }
-    return cachedTransporter
+    return nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user,
+        pass,
+      },
+    })
   }
   return null
 }
 
-// 2. Resend Client (Alternative)
+/**
+ * 2. Resend Client (Alternative)
+ */
 function getResendClient() {
-  const apiKey = process.env.RESEND_API_KEY?.trim()
+  const apiKey = (process.env.RESEND_API_KEY || "").replace(/^["']|["']$/g, "").trim()
   if (!apiKey) return null
   return new Resend(apiKey)
 }
@@ -47,66 +35,47 @@ interface EmailOptions {
   to: string
   subject: string
   html: string
+  text?: string
 }
 
-export async function sendEmail({ to, subject, html }: EmailOptions) {
+export async function sendEmail({ to, subject, html, text }: EmailOptions) {
   const cleanTo = to.toLowerCase().trim()
-  const user = (process.env.GMAIL_USER || "").trim()
-  const pass = (process.env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, "").trim()
+  const user = (process.env.GMAIL_USER || "").replace(/^["']|["']$/g, "").trim()
   const fromName = "DataCo-op"
   const fromAddress = user || "onboarding@datacoop.in"
 
-  // 1. Try Nodemailer (Gmail) via SSL port 465
+  // Plaintext version (if not provided, strip HTML tags)
+  const plainText =
+    text ||
+    html
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s{2,}/g, " ")
+      .trim()
+
+  // 1. Try Nodemailer (Gmail SMTP)
   const transporter = getMailTransporter()
-  if (transporter && user && pass) {
+  if (transporter && user) {
     try {
       const info = await transporter.sendMail({
-        from: {
-          name: fromName,
-          address: fromAddress,
-        },
+        from: `"${fromName}" <${fromAddress}>`,
         to: cleanTo,
+        replyTo: fromAddress,
         subject,
+        text: plainText,
         html,
+        headers: {
+          "X-Entity-Ref-ID": `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        },
       })
-      console.log(`[EMAIL_SENT_NODEMAILER] Successfully sent to ${cleanTo}, MessageId: ${info.messageId}`)
+      console.log(`[EMAIL_SENT_GMAIL] Successfully delivered to ${cleanTo}, MessageId: ${info.messageId}`)
       return { success: true, messageId: info.messageId }
     } catch (error) {
-      console.error("[NODEMAILER_ERROR_465]", error)
-
-      // Fallback: Try port 587 with STARTTLS
-      try {
-        const fallbackTransporter = nodemailer.createTransport({
-          host: "smtp.gmail.com",
-          port: 587,
-          secure: false,
-          auth: {
-            user,
-            pass,
-          },
-          tls: {
-            rejectUnauthorized: false,
-          },
-        })
-        const info = await fallbackTransporter.sendMail({
-          from: {
-            name: fromName,
-            address: fromAddress,
-          },
-          to: cleanTo,
-          subject,
-          html,
-        })
-        console.log(`[EMAIL_SENT_NODEMAILER_587] Successfully sent via port 587 to ${cleanTo}, MessageId: ${info.messageId}`)
-        return { success: true, messageId: info.messageId }
-      } catch (fallbackError) {
-        console.error("[NODEMAILER_ERROR_587_FALLBACK]", fallbackError)
-        return { success: false, error: fallbackError }
-      }
+      console.error("[GMAIL_SEND_ERROR]", error)
     }
   }
 
-  // 2. Next, try Resend
+  // 2. Try Resend if configured
   const resend = getResendClient()
   if (resend) {
     try {
@@ -114,6 +83,7 @@ export async function sendEmail({ to, subject, html }: EmailOptions) {
         from: `${fromName} <${fromAddress}>`,
         to: cleanTo,
         subject,
+        text: plainText,
         html,
       })
       if (error) {
@@ -128,19 +98,22 @@ export async function sendEmail({ to, subject, html }: EmailOptions) {
     }
   }
 
-  // Fallback dev preview if no email credentials configured
-  console.warn("[EMAIL_SERVICE] No working email credentials. Simulated preview:")
-  console.log(`To: ${cleanTo} | Subject: ${subject}`)
+  // 3. Simulated dev fallback
+  console.warn(`[EMAIL_FALLBACK] No live email sent. Simulating delivery to ${cleanTo}: ${subject}`)
   return { success: false, error: "No email service configured" }
 }
 
 /**
- * Send 6-Digit Email Verification Code (OTP) for Signup
+ * 1. Send 6-Digit Email Verification Code (OTP) for Signup
  */
 export async function sendVerificationCodeEmail(email: string, code: string) {
+  const subject = `DataCo-op Signup Verification Code: ${code}`
+  const text = `Hello,\n\nYour DataCo-op email verification code is: ${code}\n\nThis code will expire in 10 minutes. Enter it on the verification screen to complete your registration.\n\nIf you did not request this code, you can safely ignore this email.\n\n- The DataCo-op Team`
+  
   return sendEmail({
     to: email,
-    subject: `Your DataCo-op Verification Code: ${code}`,
+    subject,
+    text,
     html: `
       <!DOCTYPE html>
       <html>
@@ -153,7 +126,7 @@ export async function sendVerificationCodeEmail(email: string, code: string) {
           .title { font-size: 24px; font-weight: 800; color: #1B3A5C; margin: 0; }
           .subtitle { font-size: 14px; color: #5C6B73; margin-top: 6px; }
           .code-box { background: #F3EFE6; border: 2px dashed #D4A373; border-radius: 8px; padding: 18px; text-align: center; margin: 28px 0; }
-          .code { font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #1B3A5C; font-family: monospace; }
+          .code { font-size: 38px; font-weight: 900; letter-spacing: 8px; color: #1B3A5C; font-family: monospace; }
           .note { font-size: 13px; color: #6b7280; text-align: center; margin-top: 8px; }
           .footer { text-align: center; font-size: 12px; color: #9ca3af; margin-top: 32px; border-top: 1px solid #f0f0f0; padding-top: 16px; }
         </style>
@@ -185,12 +158,16 @@ export async function sendVerificationCodeEmail(email: string, code: string) {
 }
 
 /**
- * Send 6-Digit Email Login OTP (Passwordless Login)
+ * 2. Send 6-Digit Email Login OTP (Passwordless Login)
  */
 export async function sendLoginOtpEmail(email: string, code: string) {
+  const subject = `DataCo-op Login Code: ${code}`
+  const text = `Hello,\n\nYour DataCo-op one-time login code is: ${code}\n\nThis code will expire in 10 minutes. Never share this code with anyone.\n\n- The DataCo-op Team`
+
   return sendEmail({
     to: email,
-    subject: `DataCo-op Login Code: ${code}`,
+    subject,
+    text,
     html: `
       <!DOCTYPE html>
       <html>
@@ -240,12 +217,16 @@ export async function sendLoginOtpEmail(email: string, code: string) {
 }
 
 /**
- * Send Password Reset Code Email
+ * 3. Send Password Reset / Recovery Code Email
  */
 export async function sendPasswordResetEmail(email: string, code: string) {
+  const subject = `DataCo-op Password Recovery Code: ${code}`
+  const text = `Hello,\n\nYour DataCo-op password reset recovery code is: ${code}\n\nThis code will expire in 10 minutes. Enter this code to set a new password for your account.\n\nIf you did not request a password reset, please secure your account immediately.\n\n- The DataCo-op Team`
+
   return sendEmail({
     to: email,
-    subject: `Reset your DataCo-op Password: ${code}`,
+    subject,
+    text,
     html: `
       <!DOCTYPE html>
       <html>
@@ -267,14 +248,14 @@ export async function sendPasswordResetEmail(email: string, code: string) {
         <div class="card">
           <div class="header">
             <h1 class="title">DataCo-op</h1>
-            <div class="subtitle">Password Reset Request</div>
+            <div class="subtitle">Account Recovery Request</div>
           </div>
           <p style="font-size: 16px; line-height: 1.5; color: #2B2D42;">Hello,</p>
-          <p style="font-size: 15px; line-height: 1.6; color: #4A4E69;">We received a request to reset the password for your account. Use the code below to choose a new password:</p>
+          <p style="font-size: 15px; line-height: 1.6; color: #4A4E69;">We received a request to reset the password for your account. Use the recovery code below to choose a new password:</p>
           
           <div class="code-box">
             <div class="code">${code}</div>
-            <div class="note">This password reset code will expire in 10 minutes.</div>
+            <div class="note">This recovery code will expire in 10 minutes.</div>
           </div>
 
           <p style="font-size: 13px; color: #6b7280; line-height: 1.5;">If you did not request a password reset, please change your password immediately or contact our security team.</p>
@@ -290,12 +271,16 @@ export async function sendPasswordResetEmail(email: string, code: string) {
 }
 
 /**
- * Send Password Changed Confirmation Email
+ * 4. Send Password Changed Confirmation Email
  */
 export async function sendPasswordChangedEmail(email: string, name?: string) {
+  const subject = `Security Alert: Your DataCo-op Password Was Changed`
+  const text = `Hi ${name || "there"},\n\nYour DataCo-op account password was successfully updated on ${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST.\n\nIf you made this change, no action is needed. If you did not make this change, please reset your password immediately.\n\n- The DataCo-op Team`
+
   return sendEmail({
     to: email,
-    subject: `Security Alert: Your DataCo-op Password Was Changed`,
+    subject,
+    text,
     html: `
       <!DOCTYPE html>
       <html>
@@ -323,7 +308,7 @@ export async function sendPasswordChangedEmail(email: string, name?: string) {
           <p style="font-size: 13px; color: #6b7280;">If you made this change, no further action is needed. If you did NOT change your password, please reset it immediately.</p>
           
           <div class="footer">
-            DataCo-op Security Team &bull; ${FROM_EMAIL}
+            DataCo-op Security Team
           </div>
         </div>
       </body>
@@ -333,15 +318,18 @@ export async function sendPasswordChangedEmail(email: string, name?: string) {
 }
 
 /**
- * Send Welcome Email on Signup / First Sign-in
+ * 5. Send Welcome Email on Signup / First Sign-in
  */
 export async function sendWelcomeEmail(email: string, name: string, role: string = "USER") {
   const isBrand = role === "BRAND"
   const dashboardLink = isBrand ? `${APP_URL}/brand/dashboard` : `${APP_URL}/dashboard`
+  const subject = `Welcome to DataCo-op, ${name || "Member"}! 🎉`
+  const text = `Hi ${name || "there"},\n\nWelcome to DataCo-op! You can now access your dashboard at ${dashboardLink}.\n\n- The DataCo-op Team`
 
   return sendEmail({
     to: email,
-    subject: `Welcome to DataCo-op, ${name || "Member"}! 🎉`,
+    subject,
+    text,
     html: `
       <!DOCTYPE html>
       <html>
@@ -405,7 +393,7 @@ export async function sendWelcomeEmail(email: string, name: string, role: string
           </p>
           
           <div class="footer">
-            Sent by DataCo-op &bull; ${FROM_EMAIL}
+            Sent by DataCo-op Team
           </div>
         </div>
       </body>
@@ -415,12 +403,16 @@ export async function sendWelcomeEmail(email: string, name: string, role: string
 }
 
 /**
- * Send Sign-in / Login Alert Email
+ * 6. Send Sign-in / Login Alert Email
  */
 export async function sendLoginAlertEmail(email: string, name: string) {
+  const subject = `Security Alert: New Sign-in to your DataCo-op Account`
+  const text = `Hi ${name || "there"},\n\nWe noticed a successful sign-in to your DataCo-op account on ${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST.\n\nAccount: ${email}\nStatus: Authenticated Successfully\n\nIf this was you, no action is required. If you did not sign in, please secure your account immediately.\n\n- The DataCo-op Team`
+
   return sendEmail({
     to: email,
-    subject: `Security Alert: New Sign-in to your DataCo-op Account`,
+    subject,
+    text,
     html: `
       <!DOCTYPE html>
       <html>
@@ -448,7 +440,7 @@ export async function sendLoginAlertEmail(email: string, name: string) {
           <p style="font-size: 13px; color: #6b7280;">If this was you, no action is required. If you did not sign in, please secure your account immediately.</p>
           
           <div class="footer">
-            DataCo-op Security Team &bull; ${FROM_EMAIL}
+            DataCo-op Security Team
           </div>
         </div>
       </body>

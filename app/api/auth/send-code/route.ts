@@ -17,14 +17,14 @@ export async function POST(req: Request) {
     const cleanEmail = email.toLowerCase().trim()
 
     // 1. Check existing accounts in database
-    const existingUser = await prisma.user.findUnique({
-      where: { email: cleanEmail },
+    const existingUser = await prisma.user.findFirst({
+      where: { email: { equals: cleanEmail, mode: "insensitive" } },
     })
-    const existingBrand = await prisma.brand.findUnique({
-      where: { email: cleanEmail },
+    const existingBrand = await prisma.brand.findFirst({
+      where: { email: { equals: cleanEmail, mode: "insensitive" } },
     })
-    const existingAdmin = await prisma.admin.findUnique({
-      where: { email: cleanEmail },
+    const existingAdmin = await prisma.admin.findFirst({
+      where: { email: { equals: cleanEmail, mode: "insensitive" } },
     })
     const accountExists = Boolean(existingUser || existingBrand || existingAdmin)
 

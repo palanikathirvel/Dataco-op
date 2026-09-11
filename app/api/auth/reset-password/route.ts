@@ -61,7 +61,9 @@ export async function POST(req: Request) {
     let userName = ""
 
     // 3. Update User, Brand, or Admin
-    const user = await prisma.user.findUnique({ where: { email: cleanEmail } })
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: cleanEmail, mode: "insensitive" } },
+    })
     if (user) {
       await prisma.user.update({
         where: { id: user.id },
@@ -70,7 +72,9 @@ export async function POST(req: Request) {
       updated = true
       userName = user.name || "Member"
     } else {
-      const brand = await prisma.brand.findUnique({ where: { email: cleanEmail } })
+      const brand = await prisma.brand.findFirst({
+        where: { email: { equals: cleanEmail, mode: "insensitive" } },
+      })
       if (brand) {
         await prisma.brand.update({
           where: { id: brand.id },
@@ -79,7 +83,9 @@ export async function POST(req: Request) {
         updated = true
         userName = brand.name
       } else {
-        const admin = await prisma.admin.findUnique({ where: { email: cleanEmail } })
+        const admin = await prisma.admin.findFirst({
+          where: { email: { equals: cleanEmail, mode: "insensitive" } },
+        })
         if (admin) {
           await prisma.admin.update({
             where: { id: admin.id },

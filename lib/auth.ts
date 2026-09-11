@@ -68,8 +68,8 @@ export const authOptions: NextAuthOptions = {
           })
 
           // Check Admin table
-          const admin = await prisma.admin.findUnique({
-            where: { email: cleanEmail },
+          const admin = await prisma.admin.findFirst({
+            where: { email: { equals: cleanEmail, mode: "insensitive" } },
           })
           if (admin) {
             return {
@@ -81,8 +81,8 @@ export const authOptions: NextAuthOptions = {
           }
 
           // Check User table
-          const user = await prisma.user.findUnique({
-            where: { email: cleanEmail },
+          const user = await prisma.user.findFirst({
+            where: { email: { equals: cleanEmail, mode: "insensitive" } },
           })
           if (user) {
             return {
@@ -95,8 +95,8 @@ export const authOptions: NextAuthOptions = {
           }
 
           // Check Brand table
-          const brand = await prisma.brand.findUnique({
-            where: { email: cleanEmail },
+          const brand = await prisma.brand.findFirst({
+            where: { email: { equals: cleanEmail, mode: "insensitive" } },
           })
           if (brand) {
             return {
@@ -114,8 +114,8 @@ export const authOptions: NextAuthOptions = {
         if (!credentials.password) return null
 
         // Check Admin table first
-        const admin = await prisma.admin.findUnique({
-          where: { email: cleanEmail },
+        const admin = await prisma.admin.findFirst({
+          where: { email: { equals: cleanEmail, mode: "insensitive" } },
         })
 
         if (admin?.passwordHash) {
@@ -131,8 +131,8 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Check User table
-        const user = await prisma.user.findUnique({
-          where: { email: cleanEmail },
+        const user = await prisma.user.findFirst({
+          where: { email: { equals: cleanEmail, mode: "insensitive" } },
         })
 
         if (user?.passwordHash) {
@@ -149,8 +149,8 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Check Brand table
-        const brand = await prisma.brand.findUnique({
-          where: { email: cleanEmail },
+        const brand = await prisma.brand.findFirst({
+          where: { email: { equals: cleanEmail, mode: "insensitive" } },
         })
 
         if (brand?.passwordHash) {
