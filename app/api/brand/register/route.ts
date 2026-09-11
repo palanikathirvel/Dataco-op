@@ -43,6 +43,14 @@ export async function POST(req: Request) {
       select: { id: true, email: true, name: true },
     })
 
+    // Send welcome email asynchronously
+    try {
+      const { sendWelcomeEmail } = await import("@/lib/email")
+      await sendWelcomeEmail(email, companyName.trim(), "BRAND")
+    } catch (emailErr) {
+      console.error("[BRAND_WELCOME_EMAIL_ERROR]", emailErr)
+    }
+
     return NextResponse.json({ brand }, { status: 201 })
   } catch (err) {
     console.error("[BRAND_REGISTER_ERROR]", err)

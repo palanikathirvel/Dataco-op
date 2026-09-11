@@ -110,13 +110,16 @@ export const authOptions: NextAuthOptions = {
             where: { email: user.email },
           })
 
+          let isNewUser = false
           if (!dbUser) {
+            isNewUser = true
             dbUser = await prisma.user.create({
               data: {
                 email: user.email,
                 name: user.name || "",
                 image: user.image || "",
                 googleId: account.providerAccountId,
+                emailVerified: new Date(),
                 role: "USER",
                 status: "ACTIVE",
               },
@@ -133,12 +136,36 @@ export const authOptions: NextAuthOptions = {
 
           user.id = dbUser.id
           user.role = dbUser.role
+
+          // Send welcome or login alert email asynchronously
+          try {
+            const { sendWelcomeEmail, sendLoginAlertEmail } = await import("./email")
+            if (isNewUser) {
+              await sendWelcomeEmail(user.email, user.name || "Member", "USER")
+            } else {
+              await sendLoginAlertEmail(user.email, user.name || "Member")
+            }
+          } catch (emailErr) {
+            console.error("[AUTH_EMAIL_ERROR]", emailErr)
+          }
+
           return true
         } catch (error) {
           console.error("Error during Google signIn:", error)
           return false
         }
       }
+
+      // If credentials sign in, notify the user via email as well
+      if (user?.email) {
+        try {
+          const { sendLoginAlertEmail } = await import("./email")
+          await sendLoginAlertEmail(user.email, user.name || "Member")
+        } catch (emailErr) {
+          console.error("[CREDENTIALS_LOGIN_EMAIL_ERROR]", emailErr)
+        }
+      }
+
       return true
     },
     async jwt({ token, user }) {

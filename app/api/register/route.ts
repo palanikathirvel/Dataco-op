@@ -40,11 +40,20 @@ export async function POST(req: Request) {
         gender: gender ?? null,
         city: city ?? null,
         pincode: pincode ?? null,
+        emailVerified: new Date(),
         kycStatus: "PENDING",
         role: "USER",
       },
       select: { id: true, email: true, name: true },
     })
+
+    // Send welcome email asynchronously
+    try {
+      const { sendWelcomeEmail } = await import("@/lib/email")
+      await sendWelcomeEmail(email, name.trim(), "USER")
+    } catch (emailErr) {
+      console.error("[WELCOME_EMAIL_ERROR]", emailErr)
+    }
 
     return NextResponse.json({ user }, { status: 201 })
   } catch (err) {
