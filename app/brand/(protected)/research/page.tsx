@@ -20,17 +20,17 @@ export default async function BrandResearchListPage() {
   })
 
   return (
-    <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 md:p-8 max-w-5xl mx-auto space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-border/40">
         <div>
-          <h1 className="text-2xl font-bold">Research</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            All your research requests and their results
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Research Campaigns</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+            Manage your audience research studies and inspect real-time responses
           </p>
         </div>
-        <Button asChild>
-          <Link href="/brand/research/new">
-            <PlusCircle className="h-4 w-4" /> New research
+        <Button asChild className="w-full sm:w-auto shrink-0 shadow-sm">
+          <Link href="/brand/research/new" className="flex items-center justify-center gap-1.5 font-bold">
+            <PlusCircle className="h-4 w-4" /> New Research Study
           </Link>
         </Button>
       </div>

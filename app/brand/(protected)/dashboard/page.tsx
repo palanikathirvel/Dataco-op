@@ -65,23 +65,23 @@ export default async function BrandDashboardPage() {
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 md:p-8 max-w-6xl mx-auto space-y-6 sm:space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-border/40">
         <div>
-          <h1 className="text-2xl font-bold">Brand Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Brand Dashboard</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
             Welcome back, {brand.name}
           </p>
         </div>
-        <Button asChild>
-          <Link href="/brand/research/new">
-            <PlusCircle className="h-4 w-4" /> New research
+        <Button asChild className="w-full sm:w-auto shrink-0 shadow-sm">
+          <Link href="/brand/research/new" className="flex items-center justify-center gap-1.5 font-bold">
+            <PlusCircle className="h-4 w-4" /> New Research Campaign
           </Link>
         </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
         <Card>
           <CardContent className="p-5">
             <div className="flex items-center justify-between">

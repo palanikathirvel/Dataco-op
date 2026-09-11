@@ -83,14 +83,14 @@ export default async function DashboardPage() {
   if (!user) redirect("/login")
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6 md:p-8 max-w-6xl mx-auto space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
           Welcome back, {user.name?.split(" ")[0] ?? "there"}
         </h1>
-        <p className="text-muted-foreground mt-1">
-          Here&apos;s what&apos;s happening with your account
+        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
+          Here&apos;s what&apos;s happening with your verified data and survey earnings
         </p>
       </div>
 

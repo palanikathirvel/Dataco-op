@@ -483,13 +483,13 @@ export function PKAgencyChatbot() {
           </div>
         )}
 
-        {/* Circular Falcon Logo Button (Draggable by user) */}
+        {/* Circular Falcon Logo Button (Draggable by user, clean dark border, no plus sign or notification number) */}
         <div
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
-          className={`relative group h-13 w-13 sm:h-16 sm:w-16 rounded-full bg-white border-3 border-[#1B3A5C] shadow-[4px_4px_0_0_#1B3A5C] flex items-center justify-center cursor-grab active:cursor-grabbing transition-transform duration-150 ${
+          className={`relative group h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-white border-3 sm:border-4 border-[#1B3A5C] shadow-[4px_4px_0_0_#1B3A5C] flex items-center justify-center cursor-grab active:cursor-grabbing transition-transform duration-150 overflow-hidden ${
             isDragging ? "scale-110 shadow-[6px_6px_0_0_#E3474F] ring-4 ring-[#E3474F]/50" : "hover:scale-105"
           } ${isOpen ? "ring-4 ring-[#E3474F]/40" : ""}`}
           title="Drag to move, click to chat"
@@ -497,32 +497,20 @@ export function PKAgencyChatbot() {
           {isOpen ? (
             <X className="h-6 w-6 sm:h-7 sm:w-7 text-[#1B3A5C] pointer-events-none" />
           ) : (
-            <div className="relative h-9 w-9 sm:h-11 sm:w-11 pointer-events-none">
+            <div className="relative h-11 w-11 sm:h-13 sm:w-13 rounded-full overflow-hidden flex items-center justify-center pointer-events-none">
               <Image
                 src="/pk-agency-logo.png"
                 alt="P.K Agency AI Assistant"
                 fill
-                className="object-contain filter drop-shadow-[0_2px_4px_rgba(27,58,92,0.2)]"
+                className="object-contain rounded-full p-0.5"
               />
             </div>
           )}
 
-          {/* Drag handle icon pill */}
-          <span className="absolute -bottom-1 -right-1 h-5 w-5 bg-[#1B3A5C] text-white rounded-full flex items-center justify-center border border-white opacity-80 group-hover:opacity-100">
-            <Move className="h-2.5 w-2.5 text-[#E49B30]" />
-          </span>
-
           {/* Online green indicator badge */}
-          <span className="absolute top-0 right-0 h-3.5 w-3.5 bg-emerald-500 border-2 border-white rounded-full flex items-center justify-center">
+          <span className="absolute top-1 right-1 h-3 w-3 bg-emerald-500 border-2 border-white rounded-full flex items-center justify-center pointer-events-none">
             <span className="h-1.5 w-1.5 bg-white rounded-full animate-ping opacity-75" />
           </span>
-
-          {/* Unread badge */}
-          {!isOpen && unreadCount > 0 && (
-            <span className="absolute -top-1 -left-1 h-5 w-5 bg-[#E3474F] text-white text-[10px] font-mono font-bold rounded-full flex items-center justify-center border border-white">
-              {unreadCount}
-            </span>
-          )}
         </div>
       </div>
 

@@ -27,11 +27,11 @@ export default async function BrandWalletPage() {
   if (!brand) redirect("/brand/login")
 
   return (
-    <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 md:p-8 max-w-5xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Wallet</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Add funds and view your spending
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Brand Wallet & Funding</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
+          Add research campaign funds and track study payouts
         </p>
       </div>
 

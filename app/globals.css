@@ -22,7 +22,7 @@
   }
 
   @media (max-width: 640px) {
-    :root { --pole-w: 10px; }
+    :root { --pole-w: 4px; }
   }
 
   *, *::before, *::after {

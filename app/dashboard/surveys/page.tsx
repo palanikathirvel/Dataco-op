@@ -39,11 +39,11 @@ export default async function SurveysPage() {
   ])
 
   return (
-    <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6 md:p-8 max-w-5xl mx-auto space-y-6 sm:space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Surveys</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Take surveys to earn money. Each one takes 3-5 minutes.
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Available Surveys</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
+          Complete high-reward verified surveys tailored to your buying habits. Payouts credit instantly.
         </p>
       </div>
 
