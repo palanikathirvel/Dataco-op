@@ -78,6 +78,6 @@ export const config = {
      * - favicon.ico, robots.txt, sitemap.xml
      * - public files (images, etc.)
      */
-    "/((?!api/auth|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|uploads|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!api/auth|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|uploads|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp4|webm|ogg|mov)$).*)",
   ],
 }
