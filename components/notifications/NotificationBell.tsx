@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect, useRef, useId } from "react"
+import { useState, useEffect, useId } from "react"
+import { createPortal } from "react-dom"
 import Link from "next/link"
 import {
   Bell,
@@ -18,7 +19,6 @@ import {
   Loader2,
   RefreshCw,
   Inbox,
-  Filter,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -39,12 +39,17 @@ interface NotificationBellProps {
 
 export function NotificationBell({ variant = "consumer" }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(false)
   const [markingAll, setMarkingAll] = useState(false)
   const [filter, setFilter] = useState<"all" | "unread">("all")
   const dialogTitleId = useId()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   async function fetchNotifications() {
     setLoading(true)
@@ -186,20 +191,21 @@ export function NotificationBell({ variant = "consumer" }: NotificationBellProps
         )}
       </button>
 
-      {/* Centered Notification Center Modal Overlay */}
-      {isOpen && (
+      {/* Centered Notification Center Modal Overlay via Portal directly to body */}
+      {isOpen && mounted && typeof document !== "undefined" && createPortal(
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby={dialogTitleId}
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+          style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, width: "100vw", height: "100vh" }}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setIsOpen(false)
             }
           }}
         >
-          <div className="relative w-full max-w-lg bg-card border-2 border-border shadow-2xl rounded-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 fade-in duration-200 font-sans">
+          <div className="relative w-full max-w-lg bg-background dark:bg-card border-2 border-border shadow-2xl rounded-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 fade-in duration-200 font-sans mx-auto">
             
             {/* Header */}
             <div className="px-5 py-4 bg-muted/40 border-b flex items-center justify-between shrink-0">
@@ -385,7 +391,8 @@ export function NotificationBell({ variant = "consumer" }: NotificationBellProps
               <span>Press ESC to close</span>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )
