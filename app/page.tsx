@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import Link from "next/link"
 import {
   ShieldCheck,
@@ -14,12 +14,44 @@ import {
   Menu,
   X,
   MessageSquarePlus,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  Maximize2,
 } from "lucide-react"
 import { Logo } from "@/components/ui/logo"
 import { FeedbackSection } from "@/components/feedback/FeedbackSection"
 
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(true)
+  const [isMuted, setIsMuted] = useState(true)
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  function togglePlay() {
+    if (!videoRef.current) return
+    if (isPlaying) {
+      videoRef.current.pause()
+      setIsPlaying(false)
+    } else {
+      videoRef.current.play()
+      setIsPlaying(true)
+    }
+  }
+
+  function toggleMute() {
+    if (!videoRef.current) return
+    videoRef.current.muted = !isMuted
+    setIsMuted(!isMuted)
+  }
+
+  function toggleFullscreen() {
+    if (!videoRef.current) return
+    if (videoRef.current.requestFullscreen) {
+      videoRef.current.requestFullscreen()
+    }
+  }
 
   return (
     <div className="min-h-screen bg-cream-200 overflow-x-hidden">
@@ -171,52 +203,108 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Right — Live survey stamp panel */}
+            {/* Right — Themed Platform Demo Video */}
             <div className="lg:col-span-5 relative mt-4 lg:mt-0">
               <div className="badge-circle hidden sm:block absolute -top-6 -right-3 z-10 text-center font-mono font-bold text-[10px] leading-tight bg-[#E3474F] text-white p-3 rounded-full border-2 border-[#1B3A5C] shadow-md">
                 Est.<br />2024<br />Live
               </div>
 
-              <div className="card-leather p-5 sm:p-7 bg-[#142C46] border-4 border-[#0D1E31] relative">
-                <div className="flex justify-between items-center mb-5 pb-3 border-b-2 border-dashed border-[#E3474F]/60">
-                  <span className="font-display text-[#F4F1E9] text-xs sm:text-sm tracking-wider uppercase font-bold">
-                    Available Surveys
-                  </span>
-                  <span className="text-[11px] text-[#EF6A6E] font-mono tracking-widest">
-                    ● LIVE
+              <div className="card-leather p-4 sm:p-6 bg-[#142C46] border-4 border-[#0D1E31] relative group">
+                <div className="flex justify-between items-center mb-3.5 pb-2.5 border-b-2 border-dashed border-[#E3474F]/60">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full bg-[#EF6A6E] animate-pulse inline-block" />
+                    <span className="font-display text-[#F4F1E9] text-xs sm:text-sm tracking-wider uppercase font-bold">
+                      Platform In Action
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-[#EF6A6E] font-mono tracking-widest flex items-center gap-1.5">
+                    <span className="bg-[#E3474F]/20 text-[#EF6A6E] px-1.5 py-0.5 rounded text-[10px] font-bold">HD</span>
+                    ● LIVE PREVIEW
                   </span>
                 </div>
 
-                <div className="space-y-3">
-                  {[
-                    { brand: "Nike India", amount: "₹180", time: "4 min", desc: "Running shoe feedback, Q3 2026" },
-                    { brand: "boAt Audio",  amount: "₹150", time: "5 min", desc: "Audio preferences, age 25–34" },
-                    { brand: "Cult.fit",   amount: "₹120", time: "3 min", desc: "Gym membership perception" },
-                  ].map((s, i) => (
-                    <Link
-                      key={s.brand}
-                      href="/login?callbackUrl=/dashboard/surveys"
-                      className={`p-3.5 flex justify-between items-center transition-colors block hover:border-[#EF6A6E] ${
-                        i === 0 ? "bg-[#E3474F]/10 border border-[#E3474F]/40" : "bg-[#F4F1E9]/5 border border-[#F4F1E9]/15"
-                      }`}
+                {/* Video screen container with vintage bezel */}
+                <div className="relative overflow-hidden border-2 border-[#0D1E31] bg-black shadow-2xl rounded-xs">
+                  <video
+                    ref={videoRef}
+                    src="/Without_the_name_datacoop.mp4"
+                    autoPlay
+                    loop
+                    muted={isMuted}
+                    playsInline
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    className="w-full h-auto aspect-video object-cover cursor-pointer block"
+                    onClick={togglePlay}
+                  />
+
+                  {/* Play icon overlay when paused */}
+                  {!isPlaying && (
+                    <button
+                      type="button"
+                      onClick={togglePlay}
+                      className="absolute inset-0 m-auto h-14 w-14 rounded-full bg-[#E3474F]/90 text-white flex items-center justify-center border-2 border-white/80 shadow-lg hover:scale-105 transition-transform"
+                      aria-label="Play video"
                     >
-                      <div className="pr-2">
-                        <div className="font-display text-[#F4F1E9] text-sm sm:text-base font-bold uppercase tracking-wide">
-                          {s.brand}
-                        </div>
-                        <div className="text-[#F4F1E9]/60 text-xs mt-0.5">{s.desc}</div>
-                        <div className="text-[#F4F1E9]/40 text-[10px] font-mono mt-1">~{s.time} • Sign In to Start</div>
-                      </div>
-                      <div className="bg-[#E3474F] text-white px-3 py-1.5 text-xs sm:text-sm font-bold font-display shrink-0">
-                        {s.amount}
-                      </div>
-                    </Link>
-                  ))}
+                      <Play size={24} className="ml-1" />
+                    </button>
+                  )}
+
+                  {/* Video Controls Bar */}
+                  <div className="absolute bottom-0 left-0 right-0 p-2.5 bg-gradient-to-t from-black/85 via-black/50 to-transparent flex items-center justify-between text-white text-xs font-mono">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={togglePlay}
+                        className="p-1.5 rounded hover:bg-white/20 transition-colors text-[#F4F1E9]"
+                        title={isPlaying ? "Pause" : "Play"}
+                        aria-label={isPlaying ? "Pause video" : "Play video"}
+                      >
+                        {isPlaying ? <Pause size={14} /> : <Play size={14} />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={toggleMute}
+                        className="p-1.5 rounded hover:bg-white/20 transition-colors text-[#F4F1E9]"
+                        title={isMuted ? "Unmute" : "Mute"}
+                        aria-label={isMuted ? "Unmute video" : "Mute video"}
+                      >
+                        {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                      </button>
+                      <span className="hidden xs:inline-block text-[10px] text-[#F4F1E9]/80 font-mono tracking-wider">
+                        DATACO-OP // PREVIEW
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-[#EF6A6E] font-bold font-mono">
+                        {isMuted ? "MUTED" : "AUDIO ON"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={toggleFullscreen}
+                        className="p-1.5 rounded hover:bg-white/20 transition-colors text-[#F4F1E9]"
+                        title="Fullscreen"
+                        aria-label="Fullscreen"
+                      >
+                        <Maximize2 size={13} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="mt-5 pt-4 border-t-2 border-dashed border-[#F4F1E9]/20 flex justify-between items-center">
-                  <span className="text-[#F4F1E9]/60 text-xs uppercase tracking-wider font-mono">Potential today</span>
-                  <span className="font-display text-[#EF6A6E] text-xl font-bold">₹450</span>
+                {/* Footer in vintage theme */}
+                <div className="mt-3.5 pt-3 border-t-2 border-dashed border-[#F4F1E9]/20 flex justify-between items-center">
+                  <span className="text-[#F4F1E9]/70 text-[11px] font-mono flex items-center gap-1.5">
+                    <span className="text-[#EF6A6E]">▶</span>
+                    <span>Real-time consumer data exchange</span>
+                  </span>
+                  <Link
+                    href="/register"
+                    className="text-[#EF6A6E] hover:text-[#F4F1E9] font-mono text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 transition-colors hover:underline"
+                  >
+                    Start Earning <ArrowRight size={12} />
+                  </Link>
                 </div>
               </div>
             </div>
