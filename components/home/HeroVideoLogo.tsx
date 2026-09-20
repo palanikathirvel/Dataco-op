@@ -24,14 +24,16 @@ export default function HeroVideoLogo() {
     }
 
     if (gl) {
-      // ── WebGL GPU Accelerated Pipeline: Transform Video Background to Home Page Color ──
+      // ── WebGL GPU Pipeline: Zoom logo to fit hero space & map background to #1B3A5C ──
       const vsSource = `
         attribute vec2 a_position;
         attribute vec2 a_texCoord;
         varying vec2 v_texCoord;
         void main() {
           gl_Position = vec4(a_position, 0.0, 1.0);
-          v_texCoord = a_texCoord;
+          // Zoom in (~20%) to enlarge the logo so it fits boldly without dead margins
+          vec2 center = vec2(0.5, 0.48);
+          v_texCoord = center + (a_texCoord - center) * 0.80;
         }
       `
 
@@ -41,9 +43,15 @@ export default function HeroVideoLogo() {
         varying vec2 v_texCoord;
 
         void main() {
+          // If zoomed coordinates ever sample outside [0, 1], treat as background
+          if (v_texCoord.x < 0.0 || v_texCoord.x > 1.0 || v_texCoord.y < 0.0 || v_texCoord.y > 1.0) {
+            gl_FragColor = vec4(0.1059, 0.2275, 0.3608, 1.0);
+            return;
+          }
+
           vec4 color = texture2D(u_image, v_texCoord);
 
-          // Home page background color: #1B3A5C -> rgb(27.0, 58.0, 92.0)
+          // Home page background color: #1B3A5C -> rgb(27, 58, 92)
           vec3 pageBg = vec3(0.1059, 0.2275, 0.3608);
 
           // Detect white background pixels in the video
@@ -132,7 +140,7 @@ export default function HeroVideoLogo() {
 
       animId = requestAnimationFrame(render)
     } else {
-      // ── 2D Canvas Fallback ──
+      // ── 2D Canvas Fallback with proportional zoom ──
       const ctx = canvas.getContext("2d", { willReadFrequently: true })
       if (!ctx) return
 
@@ -142,7 +150,15 @@ export default function HeroVideoLogo() {
 
       const render2d = () => {
         if (video.readyState >= video.HAVE_CURRENT_DATA) {
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+          const vw = video.videoWidth || 1280
+          const vh = video.videoHeight || 720
+          const zoom = 0.80
+          const sw = vw * zoom
+          const sh = vh * zoom
+          const sx = (vw - sw) / 2
+          const sy = (vh - sh) * 0.48
+
+          ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height)
           const img = ctx.getImageData(0, 0, canvas.width, canvas.height)
           const d = img.data
 
@@ -169,7 +185,7 @@ export default function HeroVideoLogo() {
   }, [])
 
   return (
-    <div className="relative w-full max-w-[500px] aspect-video flex items-center justify-center overflow-hidden">
+    <div className="relative w-full max-w-[650px] lg:max-w-[700px] xl:max-w-[780px] aspect-video flex items-center justify-center overflow-hidden">
       {/* Hidden Video Source: autoplays, loops continuously, muted */}
       <video
         ref={videoRef}
@@ -182,11 +198,11 @@ export default function HeroVideoLogo() {
         className="hidden"
       />
 
-      {/* Render Canvas: displays video with background matched to home page background (#1B3A5C) and zero action buttons */}
+      {/* Render Canvas: High-DPI 1280x720 resolution, background #1B3A5C, zero buttons */}
       <canvas
         ref={canvasRef}
-        width={640}
-        height={360}
+        width={1280}
+        height={720}
         className="w-full h-full object-contain block pointer-events-none select-none bg-[#1B3A5C]"
       />
     </div>

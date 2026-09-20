@@ -137,10 +137,10 @@ export default function HomePage() {
         <div className="absolute top-0 left-0 right-0 border-t-2 border-dashed border-[#E3474F]/70" />
 
         <div className="container-vintage">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
 
             {/* Left — Text block */}
-            <div className="lg:col-span-7 relative">
+            <div className="lg:col-span-6 relative">
               <span className="badge-bubble inline-flex items-center gap-1.5 mb-6 text-xs font-mono tracking-wider font-bold text-[#EF6A6E] bg-[#142C46] border border-[#E3474F]/50 px-3 py-1.5">
                 <ShieldCheck size={13} /> Transaction-Verified Data
               </span>
@@ -172,8 +172,8 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Right — Clean Video Logo with Fitted Low-Opacity Background */}
-            <div className="lg:col-span-5 relative mt-6 lg:mt-0 flex items-center justify-center">
+            {/* Right — Large Clean Video Player */}
+            <div className="lg:col-span-6 relative mt-8 lg:mt-0 flex items-center justify-center">
               <HeroVideoLogo />
             </div>
 
