@@ -1,11 +1,10 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useRef } from "react"
 
 export default function HeroVideoLogo() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [isPlaying, setIsPlaying] = useState(true)
 
   useEffect(() => {
     const video = videoRef.current
@@ -17,8 +16,7 @@ export default function HeroVideoLogo() {
 
     try {
       gl = canvas.getContext("webgl", {
-        alpha: true,
-        premultipliedAlpha: false,
+        alpha: false,
         antialias: true,
       })
     } catch {
@@ -26,7 +24,7 @@ export default function HeroVideoLogo() {
     }
 
     if (gl) {
-      // ── WebGL GPU Accelerated Chroma/Fitting Pipeline ──
+      // ── WebGL GPU Accelerated Pipeline: Transform Video Background to Home Page Color ──
       const vsSource = `
         attribute vec2 a_position;
         attribute vec2 a_texCoord;
@@ -41,24 +39,23 @@ export default function HeroVideoLogo() {
         precision mediump float;
         uniform sampler2D u_image;
         varying vec2 v_texCoord;
+
         void main() {
           vec4 color = texture2D(u_image, v_texCoord);
-          
-          // Distance from logo center
-          vec2 center = vec2(0.5, 0.48);
-          vec2 aspectDiff = (v_texCoord - center) * vec2(1.0, 1.25);
-          float dist = length(aspectDiff);
+
+          // Home page background color: #1B3A5C -> rgb(27.0, 58.0, 92.0)
+          vec3 pageBg = vec3(0.1059, 0.2275, 0.3608);
 
           // Detect white background pixels in the video
           float minRgb = min(min(color.r, color.g), color.b);
-          
-          if (minRgb > 0.88) {
-            // White background: fit snugly with the logo and set very low opacity (12%)
-            float mask = 1.0 - smoothstep(0.20, 0.38, dist);
-            float whiteOpacity = 0.12 * mask;
-            gl_FragColor = vec4(1.0, 1.0, 1.0, whiteOpacity);
+
+          if (minRgb > 0.83) {
+            // Smoothly blend white background into the exact home page background color (#1B3A5C)
+            float t = smoothstep(0.83, 0.94, minRgb);
+            vec3 blended = mix(color.rgb, pageBg, t);
+            gl_FragColor = vec4(blended, 1.0);
           } else {
-            // Logo graphic (shield outline, chain links, particles): fully crisp
+            // Keep logo (shield, chains, particles) vivid and crisp
             gl_FragColor = color;
           }
         }
@@ -90,9 +87,7 @@ export default function HeroVideoLogo() {
 
       const positionBuffer = gl.createBuffer()
       gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
-      // 2 triangles covering viewport, UV coords
       const vertices = new Float32Array([
-        // pos.x, pos.y, uv.x, uv.y
         -1.0, -1.0, 0.0, 1.0,
          1.0, -1.0, 1.0, 1.0,
         -1.0,  1.0, 0.0, 0.0,
@@ -118,9 +113,6 @@ export default function HeroVideoLogo() {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 
-      gl.enable(gl.BLEND)
-      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-
       const render = () => {
         if (video.readyState >= video.HAVE_CURRENT_DATA) {
           gl!.viewport(0, 0, canvas.width, canvas.height)
@@ -144,34 +136,23 @@ export default function HeroVideoLogo() {
       const ctx = canvas.getContext("2d", { willReadFrequently: true })
       if (!ctx) return
 
+      const pageR = 27
+      const pageG = 58
+      const pageB = 92
+
       const render2d = () => {
         if (video.readyState >= video.HAVE_CURRENT_DATA) {
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
           const img = ctx.getImageData(0, 0, canvas.width, canvas.height)
           const d = img.data
-          const w = canvas.width
-          const h = canvas.height
-          const cx = w * 0.5
-          const cy = h * 0.48
 
           for (let i = 0; i < d.length; i += 4) {
-            const r = d[i]
-            const g = d[i + 1]
-            const b = d[i + 2]
-            if (r > 225 && g > 225 && b > 225) {
-              const px = (i / 4) % w
-              const py = Math.floor(i / 4 / w)
-              const dx = (px - cx) / w
-              const dy = ((py - cy) / h) * 1.25
-              const dist = Math.sqrt(dx * dx + dy * dy)
-              if (dist > 0.38) {
-                d[i + 3] = 0
-              } else if (dist > 0.20) {
-                const fade = 1 - (dist - 0.20) / 0.18
-                d[i + 3] = Math.round(30 * fade)
-              } else {
-                d[i + 3] = 30 // ~12% opacity
-              }
+            const minVal = Math.min(d[i], d[i + 1], d[i + 2])
+            if (minVal > 212) {
+              const t = Math.min(1, Math.max(0, (minVal - 212) / 28))
+              d[i] = Math.round(d[i] * (1 - t) + pageR * t)
+              d[i + 1] = Math.round(d[i + 1] * (1 - t) + pageG * t)
+              d[i + 2] = Math.round(d[i + 2] * (1 - t) + pageB * t)
             }
           }
           ctx.putImageData(img, 0, 0)
@@ -187,21 +168,9 @@ export default function HeroVideoLogo() {
     }
   }, [])
 
-  const togglePlay = () => {
-    const video = videoRef.current
-    if (!video) return
-    if (video.paused) {
-      video.play()
-      setIsPlaying(true)
-    } else {
-      video.pause()
-      setIsPlaying(false)
-    }
-  }
-
   return (
-    <div className="relative w-full max-w-[480px] aspect-video flex items-center justify-center">
-      {/* Hidden Video Source Element */}
+    <div className="relative w-full max-w-[500px] aspect-video flex items-center justify-center overflow-hidden">
+      {/* Hidden Video Source: autoplays, loops continuously, muted */}
       <video
         ref={videoRef}
         src="/Without_the_name_datacoop.mp4"
@@ -210,19 +179,15 @@ export default function HeroVideoLogo() {
         muted
         playsInline
         crossOrigin="anonymous"
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
         className="hidden"
       />
 
-      {/* Render Canvas: Displays logo with low-opacity white background fitting the logo */}
+      {/* Render Canvas: displays video with background matched to home page background (#1B3A5C) and zero action buttons */}
       <canvas
         ref={canvasRef}
         width={640}
         height={360}
-        onClick={togglePlay}
-        className="w-full h-full object-contain cursor-pointer select-none block"
-        title={isPlaying ? "Click to pause" : "Click to play"}
+        className="w-full h-full object-contain block pointer-events-none select-none bg-[#1B3A5C]"
       />
     </div>
   )
