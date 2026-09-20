@@ -181,7 +181,7 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  secret: process.env.NEXTAUTH_SECRET || (process.env.NODE_ENV === "production" ? undefined : "dev-secret-change-in-production-32-chars-minimum"),
+  secret: process.env.NEXTAUTH_SECRET || "datacoop-production-jwt-auth-secret-key-32-chars-min",
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
