@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import {
   ShieldCheck,
@@ -14,44 +14,13 @@ import {
   Menu,
   X,
   MessageSquarePlus,
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  Maximize2,
 } from "lucide-react"
 import { Logo } from "@/components/ui/logo"
 import { FeedbackSection } from "@/components/feedback/FeedbackSection"
+import HeroVideoLogo from "@/components/home/HeroVideoLogo"
 
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [isPlaying, setIsPlaying] = useState(true)
-  const [isMuted, setIsMuted] = useState(true)
-  const videoRef = useRef<HTMLVideoElement>(null)
-
-  function togglePlay() {
-    if (!videoRef.current) return
-    if (isPlaying) {
-      videoRef.current.pause()
-      setIsPlaying(false)
-    } else {
-      videoRef.current.play()
-      setIsPlaying(true)
-    }
-  }
-
-  function toggleMute() {
-    if (!videoRef.current) return
-    videoRef.current.muted = !isMuted
-    setIsMuted(!isMuted)
-  }
-
-  function toggleFullscreen() {
-    if (!videoRef.current) return
-    if (videoRef.current.requestFullscreen) {
-      videoRef.current.requestFullscreen()
-    }
-  }
 
   return (
     <div className="min-h-screen bg-cream-200 overflow-x-hidden">
@@ -203,76 +172,9 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Right — Clean Standalone Video Player */}
+            {/* Right — Clean Video Logo with Fitted Low-Opacity Background */}
             <div className="lg:col-span-5 relative mt-6 lg:mt-0 flex items-center justify-center">
-              <div className="relative w-full aspect-video overflow-hidden group">
-                <video
-                  ref={videoRef}
-                  src="/Without_the_name_datacoop.mp4"
-                  autoPlay
-                  loop
-                  muted={isMuted}
-                  playsInline
-                  onPlay={() => setIsPlaying(true)}
-                  onPause={() => setIsPlaying(false)}
-                  className="w-full h-full object-cover cursor-pointer block"
-                  onClick={togglePlay}
-                />
-
-                {/* Play icon overlay when paused */}
-                {!isPlaying && (
-                  <button
-                    type="button"
-                    onClick={togglePlay}
-                    className="absolute inset-0 m-auto h-16 w-16 rounded-full bg-[#E3474F]/90 text-white flex items-center justify-center border-2 border-white/80 shadow-2xl hover:scale-110 transition-transform duration-200 z-10"
-                    aria-label="Play video"
-                  >
-                    <Play size={28} className="ml-1" />
-                  </button>
-                )}
-
-                {/* Video Controls Bar Overlay */}
-                <div className="absolute bottom-0 left-0 right-0 p-2.5 sm:p-3 bg-gradient-to-t from-black/85 via-black/50 to-transparent flex items-center justify-between text-white text-xs font-mono opacity-90 group-hover:opacity-100 transition-opacity">
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={togglePlay}
-                      className="p-1.5 rounded hover:bg-white/20 transition-colors text-[#F4F1E9]"
-                      title={isPlaying ? "Pause" : "Play"}
-                      aria-label={isPlaying ? "Pause video" : "Play video"}
-                    >
-                      {isPlaying ? <Pause size={14} /> : <Play size={14} />}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={toggleMute}
-                      className="p-1.5 rounded hover:bg-white/20 transition-colors text-[#F4F1E9]"
-                      title={isMuted ? "Unmute" : "Mute"}
-                      aria-label={isMuted ? "Unmute video" : "Mute video"}
-                    >
-                      {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-                    </button>
-                    <span className="hidden xs:inline-block text-[10px] text-[#F4F1E9]/80 font-mono tracking-wider">
-                      DATACO-OP // PREVIEW
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-[#EF6A6E] font-bold font-mono">
-                      {isMuted ? "MUTED" : "AUDIO ON"}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={toggleFullscreen}
-                      className="p-1.5 rounded hover:bg-white/20 transition-colors text-[#F4F1E9]"
-                      title="Fullscreen"
-                      aria-label="Fullscreen"
-                    >
-                      <Maximize2 size={13} />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <HeroVideoLogo />
             </div>
 
           </div>
