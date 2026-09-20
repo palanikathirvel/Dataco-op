@@ -48,16 +48,16 @@ export default function HeroVideoLogo() {
     }
 
     if (gl) {
-      // ── WebGL GPU Pipeline: Strip White Background Completely (100% Transparent) ──
+      // ── WebGL GPU Pipeline: Strip White/Cream Background Completely (100% Transparent) ──
       const vsSource = `
         attribute vec2 a_position;
         attribute vec2 a_texCoord;
         varying vec2 v_texCoord;
+        uniform vec2 u_scale;
+        uniform vec2 u_center;
         void main() {
           gl_Position = vec4(a_position, 0.0, 1.0);
-          // Scale by 0.82 to zoom in and let the logo fill the hero space prominently
-          vec2 center = vec2(0.5, 0.48);
-          v_texCoord = center + (a_texCoord - center) * 0.82;
+          v_texCoord = u_center + (a_texCoord - vec2(0.5, 0.5)) * u_scale;
         }
       `
 
@@ -75,18 +75,18 @@ export default function HeroVideoLogo() {
 
           vec4 color = texture2D(u_image, v_texCoord);
 
-          // Detect white background pixels in the video
+          // Detect light / cream / white background pixels in the video
           float minRgb = min(min(color.r, color.g), color.b);
 
-          if (minRgb > 0.85) {
-            // White background: 100% transparent (no background)
+          if (minRgb > 0.77) {
+            // Background: 100% transparent (no background)
             gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-          } else if (minRgb > 0.72) {
-            // Smooth edge feathering for clean logo antialiasing
-            float alpha = 1.0 - (minRgb - 0.72) / 0.13;
+          } else if (minRgb > 0.65) {
+            // Smooth edge antialiasing
+            float alpha = 1.0 - (minRgb - 0.65) / 0.12;
             gl_FragColor = vec4(color.rgb, alpha);
           } else {
-            // Logo graphic (shield, golden chain links, particles): fully crisp & opaque
+            // Logo graphic (shield, red chain links, circuits): fully crisp & opaque
             gl_FragColor = vec4(color.rgb, 1.0);
           }
         }
@@ -130,6 +130,8 @@ export default function HeroVideoLogo() {
 
       const aPosition = gl.getAttribLocation(program, "a_position")
       const aTexCoord = gl.getAttribLocation(program, "a_texCoord")
+      const uScale = gl.getUniformLocation(program, "u_scale")
+      const uCenter = gl.getUniformLocation(program, "u_center")
 
       gl.enableVertexAttribArray(aPosition)
       gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 16, 0)
@@ -161,6 +163,30 @@ export default function HeroVideoLogo() {
             gl!.UNSIGNED_BYTE,
             video
           )
+
+          const vw = video.videoWidth || 720
+          const vh = video.videoHeight || 1280
+          const canvasAspect = canvas.width / canvas.height
+          const videoAspect = vw / vh
+
+          let scaleX = 1.0
+          let scaleY = 1.0
+          let centerX = 0.5
+          let centerY = 0.5
+
+          if (videoAspect < 1.0) {
+            // Portrait video: adaptively scale and center without aspect distortion
+            const aspectCorr = canvasAspect / videoAspect
+            const zoom = 0.58
+            scaleX = aspectCorr * zoom
+            scaleY = zoom
+            centerX = 0.498
+            centerY = 0.486
+          }
+
+          if (uScale) gl!.uniform2f(uScale, scaleX, scaleY)
+          if (uCenter) gl!.uniform2f(uCenter, centerX, centerY)
+
           gl!.drawArrays(gl!.TRIANGLES, 0, 6)
         }
         animId = requestAnimationFrame(render)
@@ -174,25 +200,33 @@ export default function HeroVideoLogo() {
 
       const render2d = () => {
         if (video.readyState >= video.HAVE_CURRENT_DATA) {
-          const vw = video.videoWidth || 1280
-          const vh = video.videoHeight || 720
-          const zoom = 0.82
-          const sw = vw * zoom
-          const sh = vh * zoom
-          const sx = (vw - sw) / 2
-          const sy = (vh - sh) * 0.48
+          const vw = video.videoWidth || 720
+          const vh = video.videoHeight || 1280
+          const canvasAspect = canvas.width / canvas.height
+          const videoAspect = vw / vh
 
           ctx.clearRect(0, 0, canvas.width, canvas.height)
-          ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height)
+
+          if (videoAspect < 1.0) {
+            const zoom = 0.58
+            const sw = vw * (canvasAspect / videoAspect) * zoom
+            const sh = vh * zoom
+            const sx = vw * 0.498 - sw / 2
+            const sy = vh * 0.486 - sh / 2
+            ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height)
+          } else {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+          }
+
           const img = ctx.getImageData(0, 0, canvas.width, canvas.height)
           const d = img.data
 
           for (let i = 0; i < d.length; i += 4) {
             const minVal = Math.min(d[i], d[i + 1], d[i + 2])
-            if (minVal > 215) {
+            if (minVal > 196) {
               d[i + 3] = 0 // Transparent background
-            } else if (minVal > 185) {
-              const alpha = 1 - (minVal - 185) / 30
+            } else if (minVal > 165) {
+              const alpha = 1 - (minVal - 165) / 31
               d[i + 3] = Math.round(255 * alpha)
             }
           }
@@ -216,7 +250,7 @@ export default function HeroVideoLogo() {
       {/* Active Video Element in DOM (not hidden, ensuring browsers continuously decode frames) */}
       <video
         ref={videoRef}
-        src="/Without_the_name_datacoop.mp4"
+        src="/without_name_generate_image_no.mp4"
         autoPlay
         loop
         muted
