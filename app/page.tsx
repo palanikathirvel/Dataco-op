@@ -203,16 +203,20 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Right — Platform Demo Video (Seamlessly Merged with Home Page) */}
-            <div className="lg:col-span-5 relative mt-8 lg:mt-0 flex items-center justify-center">
-              {/* Subtle ambient lighting behind the video to merge with hero background */}
+            {/* Right — Platform Demo Video (Organic Logo Merged with Background) */}
+            <div className="lg:col-span-5 relative mt-4 lg:mt-0 flex flex-col items-center justify-center">
+              {/* Soft ambient ethereal glow behind the logo */}
               <div
-                className="absolute -inset-2 sm:-inset-4 bg-gradient-to-tr from-[#E3474F]/25 via-[#1B3A5C]/50 to-[#EF6A6E]/20 rounded-3xl blur-2xl opacity-60 pointer-events-none transition duration-500"
+                className="absolute inset-0 m-auto w-64 h-64 sm:w-80 sm:h-80 rounded-full bg-white/10 blur-3xl pointer-events-none"
+                aria-hidden="true"
+              />
+              <div
+                className="absolute inset-0 m-auto w-72 h-72 sm:w-96 sm:h-96 rounded-full bg-[#EF6A6E]/15 blur-3xl pointer-events-none"
                 aria-hidden="true"
               />
 
-              {/* Clean frameless video wrapper with smooth rounded edges & soft shadow */}
-              <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] border border-white/15 bg-black/40 group">
+              {/* Frameless organic container: radial mask removes the rectangular box */}
+              <div className="relative w-full max-w-[460px] aspect-video flex items-center justify-center group">
                 <video
                   ref={videoRef}
                   src="/Without_the_name_datacoop.mp4"
@@ -222,7 +226,13 @@ export default function HomePage() {
                   playsInline
                   onPlay={() => setIsPlaying(true)}
                   onPause={() => setIsPlaying(false)}
-                  className="w-full h-full object-cover cursor-pointer block"
+                  className="w-full h-full object-contain cursor-pointer block select-none"
+                  style={{
+                    WebkitMaskImage:
+                      "radial-gradient(ellipse 65% 72% at 50% 48%, rgba(0,0,0,1) 30%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.3) 60%, transparent 74%)",
+                    maskImage:
+                      "radial-gradient(ellipse 65% 72% at 50% 48%, rgba(0,0,0,1) 30%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.3) 60%, transparent 74%)",
+                  }}
                   onClick={togglePlay}
                 />
 
@@ -231,53 +241,50 @@ export default function HomePage() {
                   <button
                     type="button"
                     onClick={togglePlay}
-                    className="absolute inset-0 m-auto h-16 w-16 rounded-full bg-[#E3474F]/90 text-white flex items-center justify-center border-2 border-white/80 shadow-2xl hover:scale-110 transition-transform duration-200"
+                    className="absolute inset-0 m-auto h-16 w-16 rounded-full bg-[#E3474F]/90 text-white flex items-center justify-center border-2 border-white/80 shadow-2xl hover:scale-110 transition-transform duration-200 z-10"
                     aria-label="Play video"
                   >
                     <Play size={28} className="ml-1" />
                   </button>
                 )}
+              </div>
 
-                {/* Sleek, modern floating controls overlay */}
-                <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center justify-between text-white text-xs font-mono opacity-90 group-hover:opacity-100 transition-opacity">
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={togglePlay}
-                      className="p-1.5 rounded-lg bg-black/40 hover:bg-white/20 transition-colors text-[#F4F1E9] backdrop-blur-sm"
-                      title={isPlaying ? "Pause" : "Play"}
-                      aria-label={isPlaying ? "Pause video" : "Play video"}
-                    >
-                      {isPlaying ? <Pause size={14} /> : <Play size={14} />}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={toggleMute}
-                      className="p-1.5 rounded-lg bg-black/40 hover:bg-white/20 transition-colors text-[#F4F1E9] backdrop-blur-sm"
-                      title={isMuted ? "Unmute" : "Mute"}
-                      aria-label={isMuted ? "Unmute video" : "Mute video"}
-                    >
-                      {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-                    </button>
-                    <span className="hidden sm:inline-block text-[10px] text-[#F4F1E9]/80 font-mono tracking-wider">
-                      DATACO-OP // LIVE DEMO
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-[#EF6A6E] font-bold font-mono px-2 py-0.5 rounded bg-black/40 backdrop-blur-sm border border-[#E3474F]/30">
-                      {isMuted ? "MUTED" : "AUDIO ON"}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={toggleFullscreen}
-                      className="p-1.5 rounded-lg bg-black/40 hover:bg-white/20 transition-colors text-[#F4F1E9] backdrop-blur-sm"
-                      title="Fullscreen"
-                      aria-label="Fullscreen"
-                    >
-                      <Maximize2 size={13} />
-                    </button>
-                  </div>
+              {/* Sleek, minimalist floating controls capsule below the logo */}
+              <div className="relative z-10 mt-1">
+                <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#0D1E31]/80 backdrop-blur-md border border-white/15 shadow-xl text-white text-xs font-mono">
+                  <button
+                    type="button"
+                    onClick={togglePlay}
+                    className="p-1 rounded-full hover:bg-white/20 transition-colors text-[#F4F1E9]"
+                    title={isPlaying ? "Pause" : "Play"}
+                    aria-label={isPlaying ? "Pause video" : "Play video"}
+                  >
+                    {isPlaying ? <Pause size={13} /> : <Play size={13} />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={toggleMute}
+                    className="p-1 rounded-full hover:bg-white/20 transition-colors text-[#F4F1E9]"
+                    title={isMuted ? "Unmute" : "Mute"}
+                    aria-label={isMuted ? "Unmute video" : "Mute video"}
+                  >
+                    {isMuted ? <VolumeX size={13} /> : <Volume2 size={13} />}
+                  </button>
+                  <span className="hidden xs:inline-block text-[10px] text-[#F4F1E9]/80 font-mono tracking-wider">
+                    DATACO-OP // LIVE DEMO
+                  </span>
+                  <span className="text-[9px] text-[#EF6A6E] font-bold font-mono px-1.5 py-0.5 rounded bg-black/40 border border-[#E3474F]/30">
+                    {isMuted ? "MUTED" : "AUDIO ON"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={toggleFullscreen}
+                    className="p-1 rounded-full hover:bg-white/20 transition-colors text-[#F4F1E9]"
+                    title="Fullscreen"
+                    aria-label="Fullscreen"
+                  >
+                    <Maximize2 size={12} />
+                  </button>
                 </div>
               </div>
             </div>
