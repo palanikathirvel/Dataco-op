@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server"
 import { sendContactInquiryEmail, sendContactConfirmationEmail } from "@/lib/email"
+import { rateLimit, getClientIp } from "@/lib/ratelimit"
+
+export const dynamic = "force-dynamic"
 
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req)
     const body = await req.json()
     const { name, email, phone, topic, message } = body
 
@@ -21,6 +25,16 @@ export async function POST(req: Request) {
         { status: 400 }
       )
     }
+
+    // Rate limiting: 5 contact submissions per 15 minutes
+    const limit = rateLimit(`contact:${cleanEmail}:${ip}`, { limit: 5, windowMs: 15 * 60 * 1000 })
+    if (!limit.success) {
+      return NextResponse.json(
+        { error: "Too many messages sent. Please wait a few minutes before contacting us again." },
+        { status: 429 }
+      )
+    }
+
 
     // 1. Dispatch notification email to create.pk.123@gmail.com
     await sendContactInquiryEmail({

@@ -203,108 +203,81 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Right — Themed Platform Demo Video */}
-            <div className="lg:col-span-5 relative mt-4 lg:mt-0">
-              <div className="badge-circle hidden sm:block absolute -top-6 -right-3 z-10 text-center font-mono font-bold text-[10px] leading-tight bg-[#E3474F] text-white p-3 rounded-full border-2 border-[#1B3A5C] shadow-md">
-                Est.<br />2024<br />Live
-              </div>
+            {/* Right — Platform Demo Video (Seamlessly Merged with Home Page) */}
+            <div className="lg:col-span-5 relative mt-8 lg:mt-0 flex items-center justify-center">
+              {/* Subtle ambient lighting behind the video to merge with hero background */}
+              <div
+                className="absolute -inset-2 sm:-inset-4 bg-gradient-to-tr from-[#E3474F]/25 via-[#1B3A5C]/50 to-[#EF6A6E]/20 rounded-3xl blur-2xl opacity-60 pointer-events-none transition duration-500"
+                aria-hidden="true"
+              />
 
-              <div className="card-leather p-4 sm:p-6 bg-[#142C46] border-4 border-[#0D1E31] relative group">
-                <div className="flex justify-between items-center mb-3.5 pb-2.5 border-b-2 border-dashed border-[#E3474F]/60">
-                  <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full bg-[#EF6A6E] animate-pulse inline-block" />
-                    <span className="font-display text-[#F4F1E9] text-xs sm:text-sm tracking-wider uppercase font-bold">
-                      Platform In Action
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-[#EF6A6E] font-mono tracking-widest flex items-center gap-1.5">
-                    <span className="bg-[#E3474F]/20 text-[#EF6A6E] px-1.5 py-0.5 rounded text-[10px] font-bold">HD</span>
-                    ● LIVE PREVIEW
-                  </span>
-                </div>
+              {/* Clean frameless video wrapper with smooth rounded edges & soft shadow */}
+              <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] border border-white/15 bg-black/40 group">
+                <video
+                  ref={videoRef}
+                  src="/Without_the_name_datacoop.mp4"
+                  autoPlay
+                  loop
+                  muted={isMuted}
+                  playsInline
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
+                  className="w-full h-full object-cover cursor-pointer block"
+                  onClick={togglePlay}
+                />
 
-                {/* Video screen container with vintage bezel */}
-                <div className="relative overflow-hidden border-2 border-[#0D1E31] bg-black shadow-2xl rounded-xs">
-                  <video
-                    ref={videoRef}
-                    src="/Without_the_name_datacoop.mp4"
-                    autoPlay
-                    loop
-                    muted={isMuted}
-                    playsInline
-                    onPlay={() => setIsPlaying(true)}
-                    onPause={() => setIsPlaying(false)}
-                    className="w-full h-auto aspect-video object-cover cursor-pointer block"
+                {/* Play icon overlay when paused */}
+                {!isPlaying && (
+                  <button
+                    type="button"
                     onClick={togglePlay}
-                  />
+                    className="absolute inset-0 m-auto h-16 w-16 rounded-full bg-[#E3474F]/90 text-white flex items-center justify-center border-2 border-white/80 shadow-2xl hover:scale-110 transition-transform duration-200"
+                    aria-label="Play video"
+                  >
+                    <Play size={28} className="ml-1" />
+                  </button>
+                )}
 
-                  {/* Play icon overlay when paused */}
-                  {!isPlaying && (
+                {/* Sleek, modern floating controls overlay */}
+                <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center justify-between text-white text-xs font-mono opacity-90 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={togglePlay}
-                      className="absolute inset-0 m-auto h-14 w-14 rounded-full bg-[#E3474F]/90 text-white flex items-center justify-center border-2 border-white/80 shadow-lg hover:scale-105 transition-transform"
-                      aria-label="Play video"
+                      className="p-1.5 rounded-lg bg-black/40 hover:bg-white/20 transition-colors text-[#F4F1E9] backdrop-blur-sm"
+                      title={isPlaying ? "Pause" : "Play"}
+                      aria-label={isPlaying ? "Pause video" : "Play video"}
                     >
-                      <Play size={24} className="ml-1" />
+                      {isPlaying ? <Pause size={14} /> : <Play size={14} />}
                     </button>
-                  )}
-
-                  {/* Video Controls Bar */}
-                  <div className="absolute bottom-0 left-0 right-0 p-2.5 bg-gradient-to-t from-black/85 via-black/50 to-transparent flex items-center justify-between text-white text-xs font-mono">
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={togglePlay}
-                        className="p-1.5 rounded hover:bg-white/20 transition-colors text-[#F4F1E9]"
-                        title={isPlaying ? "Pause" : "Play"}
-                        aria-label={isPlaying ? "Pause video" : "Play video"}
-                      >
-                        {isPlaying ? <Pause size={14} /> : <Play size={14} />}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={toggleMute}
-                        className="p-1.5 rounded hover:bg-white/20 transition-colors text-[#F4F1E9]"
-                        title={isMuted ? "Unmute" : "Mute"}
-                        aria-label={isMuted ? "Unmute video" : "Mute video"}
-                      >
-                        {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-                      </button>
-                      <span className="hidden xs:inline-block text-[10px] text-[#F4F1E9]/80 font-mono tracking-wider">
-                        DATACO-OP // PREVIEW
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-[#EF6A6E] font-bold font-mono">
-                        {isMuted ? "MUTED" : "AUDIO ON"}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={toggleFullscreen}
-                        className="p-1.5 rounded hover:bg-white/20 transition-colors text-[#F4F1E9]"
-                        title="Fullscreen"
-                        aria-label="Fullscreen"
-                      >
-                        <Maximize2 size={13} />
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={toggleMute}
+                      className="p-1.5 rounded-lg bg-black/40 hover:bg-white/20 transition-colors text-[#F4F1E9] backdrop-blur-sm"
+                      title={isMuted ? "Unmute" : "Mute"}
+                      aria-label={isMuted ? "Unmute video" : "Mute video"}
+                    >
+                      {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                    </button>
+                    <span className="hidden sm:inline-block text-[10px] text-[#F4F1E9]/80 font-mono tracking-wider">
+                      DATACO-OP // LIVE DEMO
+                    </span>
                   </div>
-                </div>
 
-                {/* Footer in vintage theme */}
-                <div className="mt-3.5 pt-3 border-t-2 border-dashed border-[#F4F1E9]/20 flex justify-between items-center">
-                  <span className="text-[#F4F1E9]/70 text-[11px] font-mono flex items-center gap-1.5">
-                    <span className="text-[#EF6A6E]">▶</span>
-                    <span>Real-time consumer data exchange</span>
-                  </span>
-                  <Link
-                    href="/register"
-                    className="text-[#EF6A6E] hover:text-[#F4F1E9] font-mono text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 transition-colors hover:underline"
-                  >
-                    Start Earning <ArrowRight size={12} />
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-[#EF6A6E] font-bold font-mono px-2 py-0.5 rounded bg-black/40 backdrop-blur-sm border border-[#E3474F]/30">
+                      {isMuted ? "MUTED" : "AUDIO ON"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={toggleFullscreen}
+                      className="p-1.5 rounded-lg bg-black/40 hover:bg-white/20 transition-colors text-[#F4F1E9] backdrop-blur-sm"
+                      title="Fullscreen"
+                      aria-label="Fullscreen"
+                    >
+                      <Maximize2 size={13} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

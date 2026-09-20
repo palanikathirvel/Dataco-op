@@ -85,6 +85,9 @@ export const authOptions: NextAuthOptions = {
             where: { email: { equals: cleanEmail, mode: "insensitive" } },
           })
           if (user) {
+            if (user.status === "BANNED") {
+              throw new Error("This account has been suspended. Please contact support.")
+            }
             return {
               id: user.id,
               email: user.email,
@@ -99,6 +102,9 @@ export const authOptions: NextAuthOptions = {
             where: { email: { equals: cleanEmail, mode: "insensitive" } },
           })
           if (brand) {
+            if (brand.status === "SUSPENDED") {
+              throw new Error("This brand partner account has been suspended. Please contact support.")
+            }
             return {
               id: brand.id,
               email: brand.email,
@@ -138,6 +144,9 @@ export const authOptions: NextAuthOptions = {
         if (user?.passwordHash) {
           const valid = await bcrypt.compare(credentials.password, user.passwordHash)
           if (valid) {
+            if (user.status === "BANNED") {
+              throw new Error("This account has been suspended. Please contact support.")
+            }
             return {
               id: user.id,
               email: user.email,
@@ -156,6 +165,9 @@ export const authOptions: NextAuthOptions = {
         if (brand?.passwordHash) {
           const valid = await bcrypt.compare(credentials.password, brand.passwordHash)
           if (valid) {
+            if (brand.status === "SUSPENDED") {
+              throw new Error("This brand partner account has been suspended. Please contact support.")
+            }
             return {
               id: brand.id,
               email: brand.email,
@@ -169,7 +181,7 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  secret: process.env.NEXTAUTH_SECRET || "dev-secret-change-in-production-32-chars-minimum",
+  secret: process.env.NEXTAUTH_SECRET || (process.env.NODE_ENV === "production" ? undefined : "dev-secret-change-in-production-32-chars-minimum"),
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
@@ -191,6 +203,10 @@ export const authOptions: NextAuthOptions = {
           let dbUser = await prisma.user.findUnique({
             where: { email: user.email },
           })
+
+          if (dbUser && dbUser.status === "BANNED") {
+            return false
+          }
 
           let isNewUser = false
           if (!dbUser) {

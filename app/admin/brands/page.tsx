@@ -13,8 +13,22 @@ export default async function AdminBrandsPage() {
   if (!session || session.user.role !== "ADMIN") redirect("/login")
 
   const brands = await prisma.brand.findMany({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      industry: true,
+      website: true,
+      walletBalance: true,
+      totalSpent: true,
+      status: true,
+      approvedAt: true,
+      approvedBy: true,
+      createdAt: true,
+    },
     orderBy: { createdAt: "desc" },
   })
+
 
   const pending = brands.filter((b) => b.status === "PENDING_APPROVAL")
   const approved = brands.filter((b) => b.status === "APPROVED")

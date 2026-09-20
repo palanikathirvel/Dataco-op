@@ -5,16 +5,32 @@ import {
   sendLoginOtpEmail,
   sendPasswordResetEmail,
 } from "@/lib/email"
+import { rateLimit, getClientIp } from "@/lib/ratelimit"
+
+export const dynamic = "force-dynamic"
 
 export async function POST(req: Request) {
   try {
-    const { email, type = "register" } = await req.json()
+    const ip = getClientIp(req)
+    const body = await req.json()
+    const { email, type = "register" } = body
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: "Please provide a valid email address" }, { status: 400 })
     }
 
     const cleanEmail = email.toLowerCase().trim()
+
+    // Rate limiting: 5 requests per 10 minutes per IP & email
+    const ipLimit = rateLimit(`send-code:ip:${ip}`, { limit: 10, windowMs: 10 * 60 * 1000 })
+    const emailLimit = rateLimit(`send-code:email:${cleanEmail}`, { limit: 5, windowMs: 10 * 60 * 1000 })
+
+    if (!ipLimit.success || !emailLimit.success) {
+      return NextResponse.json(
+        { error: "Too many verification requests. Please wait a few minutes before trying again." },
+        { status: 429 }
+      )
+    }
 
     // 1. Check existing accounts in database
     const existingUser = await prisma.user.findFirst({
@@ -71,13 +87,16 @@ export async function POST(req: Request) {
       emailResult = await sendVerificationCodeEmail(cleanEmail, code)
     }
 
+    // Never log raw OTP codes in server logs
     console.log(
-      `[AUTH_OTP_SENT] Type: ${type} | Email: ${cleanEmail} | Code: ${code} | Delivered: ${emailResult.success}`
+      `[AUTH_OTP_SENT] Type: ${type} | Email: ${cleanEmail} | Delivered: ${emailResult.success}`
     )
 
     if (!emailResult.success) {
       console.warn(`[EMAIL_NOT_DELIVERED] Email sending failed:`, emailResult.error)
     }
+
+    const isProduction = process.env.NODE_ENV === "production"
 
     return NextResponse.json({
       success: true,
@@ -87,12 +106,11 @@ export async function POST(req: Request) {
           : type === "reset-password"
           ? `Password reset code sent to ${cleanEmail}`
           : `Verification code sent to ${cleanEmail}`
-        : `Verification code generated for ${cleanEmail}. (If email takes time to arrive, check spam or use dev code below)`,
-      // Always provide dev preview if email delivery had an issue or in dev environment
-      devPreview:
-        !emailResult.success || (!process.env.GMAIL_APP_PASSWORD && !process.env.RESEND_API_KEY)
-          ? code
-          : undefined,
+        : `Verification code generated for ${cleanEmail}. (If email takes time to arrive, check spam folder)`,
+      // NEVER leak devPreview in production
+      devPreview: !isProduction && (!emailResult.success || (!process.env.GMAIL_APP_PASSWORD && !process.env.RESEND_API_KEY))
+        ? code
+        : undefined,
     })
   } catch (error) {
     console.error("[SEND_CODE_ERROR]", error)
@@ -102,4 +120,5 @@ export async function POST(req: Request) {
     )
   }
 }
+
 

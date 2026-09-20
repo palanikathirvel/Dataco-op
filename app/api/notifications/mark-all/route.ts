@@ -3,6 +3,8 @@ import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { NextResponse } from "next/server"
 
+export const dynamic = "force-dynamic"
+
 export async function POST() {
   try {
     const session = await getServerSession(authOptions)
@@ -24,7 +26,13 @@ export async function POST() {
       })
     } else if (role === "ADMIN") {
       await prisma.notification.updateMany({
-        where: { read: false },
+        where: {
+          OR: [
+            { userId: id },
+            { type: "ADMIN_ALERT" },
+          ],
+          read: false,
+        },
         data: { read: true },
       })
     }
@@ -35,3 +43,4 @@ export async function POST() {
     return NextResponse.json({ error: "Failed to update notifications" }, { status: 500 })
   }
 }
+

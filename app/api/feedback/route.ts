@@ -3,6 +3,9 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { getAllFeedbacks, addFeedback, getFeedbackStats } from "@/lib/feedbackStore"
 import { sendEmail } from "@/lib/email"
+import { rateLimit, getClientIp } from "@/lib/ratelimit"
+
+export const dynamic = "force-dynamic"
 
 export async function GET(req: Request) {
   try {
@@ -18,8 +21,8 @@ export async function GET(req: Request) {
       }
     }
 
-    const feedbacks = getAllFeedbacks(userType || undefined, userIdFilter)
-    const stats = getFeedbackStats(userType || undefined)
+    const feedbacks = await getAllFeedbacks(userType || undefined, userIdFilter)
+    const stats = await getFeedbackStats(userType || undefined)
     return NextResponse.json({ success: true, feedbacks, stats })
   } catch (error) {
     console.error("[GET_FEEDBACK_ERROR]", error)
@@ -29,11 +32,21 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req)
     const session = await getServerSession(authOptions)
     if (!session || !session.user) {
       return NextResponse.json(
         { error: "Authentication required. Please sign in to submit feedback." },
         { status: 401 }
+      )
+    }
+
+    // Rate limit: 5 feedback submissions per hour per user
+    const limit = rateLimit(`feedback:${session.user.id}:${ip}`, { limit: 5, windowMs: 60 * 60 * 1000 })
+    if (!limit.success) {
+      return NextResponse.json(
+        { error: "Too many feedback submissions. Please try again later." },
+        { status: 429 }
       )
     }
 
@@ -61,7 +74,7 @@ export async function POST(req: Request) {
     const userEmail = session.user.email || undefined
     const userId = session.user.id
 
-    const newFeedback = addFeedback({
+    const newFeedback = await addFeedback({
       name: finalName,
       role: role?.trim() || (isBrand ? "Brand Partner" : "Verified Consumer"),
       companyOrLocation: companyOrLocation?.trim() || (isBrand ? "Partner Brand" : "India"),
@@ -73,7 +86,7 @@ export async function POST(req: Request) {
       userEmail,
     })
 
-    // Notify Palani at create.pk.123@gmail.com
+    // Notify admin
     try {
       const stars = "★".repeat(parsedRating) + "☆".repeat(5 - parsedRating)
       await sendEmail({
@@ -114,7 +127,7 @@ export async function POST(req: Request) {
       console.warn("[FEEDBACK_EMAIL_NOTICE]", mailError)
     }
 
-    const stats = getFeedbackStats(finalUserType)
+    const stats = await getFeedbackStats(finalUserType)
 
     return NextResponse.json(
       { success: true, feedback: newFeedback, stats, message: "Thank you for sharing your feedback!" },
@@ -128,3 +141,4 @@ export async function POST(req: Request) {
     )
   }
 }
+

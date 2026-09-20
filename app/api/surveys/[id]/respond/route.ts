@@ -3,6 +3,9 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { Decimal } from "@prisma/client/runtime/library"
+import { v4 as uuidv4 } from "uuid"
+
+export const dynamic = "force-dynamic"
 
 export async function POST(
   req: Request,
@@ -26,7 +29,7 @@ export async function POST(
       where: { id: params.id },
       include: {
         SurveyQuestion: { orderBy: { order: "asc" } },
-        brand: { select: { id: true, walletBalance: true } },
+        brand: { select: { id: true, name: true, walletBalance: true } },
       },
     })
 
@@ -35,7 +38,7 @@ export async function POST(
     }
     if (survey.status !== "ACTIVE") {
       return NextResponse.json(
-        { error: "Survey is not active" },
+        { error: "Survey is no longer active" },
         { status: 400 }
       )
     }
@@ -56,7 +59,7 @@ export async function POST(
     })
     if (existing) {
       return NextResponse.json(
-        { error: "Already responded to this survey" },
+        { error: "You have already responded to this survey" },
         { status: 400 }
       )
     }
@@ -74,80 +77,113 @@ export async function POST(
       }
     }
 
-    // Create the response (and survey answers if model exists)
-    const response = await prisma.surveyResponse.create({
-      data: {
-        userId: session.user.id,
-        researchRequestId: survey.id,
-        status: "SUBMITTED",
-        timeSpent: typeof timeSpentSeconds === "number" ? timeSpentSeconds : null,
-        submittedAt: new Date(),
-        updatedAt: new Date(),
-      },
-    })
+    const payout = Number(survey.pricePerResponse)
 
-    // Save individual answers (if SurveyAnswer model exists)
-    if ((prisma as any).surveyAnswer) {
+    // Execute atomic transaction for response creation, sample count validation, wallet payout, and audit ledger
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Enforce sample size limit under transaction
+      const responseCount = await tx.surveyResponse.count({
+        where: { researchRequestId: survey.id },
+      })
+
+      if (responseCount >= survey.sampleSize) {
+        await tx.researchRequest.update({
+          where: { id: survey.id },
+          data: { status: "COMPLETED" },
+        })
+        throw new Error("This research project has reached its maximum sample size and is now closed.")
+      }
+
+      // 2. Create the survey response
+      const response = await tx.surveyResponse.create({
+        data: {
+          userId: session.user.id,
+          researchRequestId: survey.id,
+          status: "APPROVED",
+          timeSpent: typeof timeSpentSeconds === "number" ? timeSpentSeconds : null,
+          submittedAt: new Date(),
+          updatedAt: new Date(),
+        },
+      })
+
+      // 3. Save individual answers
       for (const q of survey.SurveyQuestion) {
         const ans = (answers as any)[q.id]
         if (ans !== undefined) {
           const valueStr = Array.isArray(ans) ? ans.join(",") : String(ans)
-          try {
-            await (prisma as any).surveyAnswer.create({
-              data: {
-                responseId: response.id,
-                questionId: q.id,
-                value: valueStr,
-              },
-            })
-          } catch (e) {
-            // Best-effort, don't fail the whole submission
-            console.warn("[SURVEY_ANSWER]", e)
-          }
+          await tx.surveyAnswer.create({
+            data: {
+              id: uuidv4(),
+              responseId: response.id,
+              questionId: q.id,
+              value: valueStr,
+              updatedAt: new Date(),
+            },
+          })
         }
       }
-    }
 
-    // Credit user wallet
-    const payout = Number(survey.pricePerResponse)
-    const user = await prisma.user.update({
-      where: { id: session.user.id },
-      data: {
-        walletBalance: { increment: payout },
-        totalEarned: { increment: payout },
-      },
-    })
+      // 4. Fetch current user balance and credit wallet atomically
+      const currentUser = await tx.user.findUnique({
+        where: { id: session.user.id },
+        select: { id: true, walletBalance: true },
+      })
 
-    // Record the transaction (best-effort)
-    try {
-      const balanceAfter = user.walletBalance
-      const balanceBefore = new Decimal(Number(balanceAfter) - payout)
-      await prisma.transaction.create({
+      if (!currentUser) {
+        throw new Error("User account not found")
+      }
+
+      const balanceBefore = Number(currentUser.walletBalance)
+      const balanceAfter = balanceBefore + payout
+
+      await tx.user.update({
+        where: { id: session.user.id },
+        data: {
+          walletBalance: { increment: payout },
+          totalEarned: { increment: payout },
+        },
+      })
+
+      // 5. Record transaction in ledger
+      await tx.transaction.create({
         data: {
           userId: session.user.id,
           type: "SURVEY_EARNING",
           amount: payout,
-          balanceBefore,
-          balanceAfter,
-          description: `Survey: ${survey.title} (${(survey as any).brand?.name ?? "Brand"})`,
+          balanceBefore: new Decimal(balanceBefore),
+          balanceAfter: new Decimal(balanceAfter),
+          description: `Survey Reward: ${survey.title} (${(survey as any).brand?.name ?? "Brand Partner"})`,
           brandId: survey.brandId,
           researchRequestId: survey.id,
         },
       })
-    } catch (e) {
-      console.warn("[TRANSACTION_RECORD]", e)
-    }
+
+      // 6. If this was the last required response, mark survey as COMPLETED
+      if (responseCount + 1 >= survey.sampleSize) {
+        await tx.researchRequest.update({
+          where: { id: survey.id },
+          data: { status: "COMPLETED" },
+        })
+      }
+
+      return { response, payout }
+    })
 
     return NextResponse.json({
       success: true,
-      payout,
-      message: "Survey submitted",
+      payout: result.payout,
+      message: "Survey submitted successfully! Payout credited to your wallet.",
     })
-  } catch (err) {
+  } catch (err: any) {
     console.error("[SURVEY_RESPOND]", err)
+    const isClientError =
+      err.message === "This research project has reached its maximum sample size and is now closed." ||
+      err.message === "User account not found"
+
     return NextResponse.json(
-      { error: "Failed to submit survey" },
-      { status: 500 }
+      { error: err.message || "Failed to submit survey" },
+      { status: isClientError ? 400 : 500 }
     )
   }
 }
+

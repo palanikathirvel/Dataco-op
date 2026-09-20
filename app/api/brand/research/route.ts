@@ -2,6 +2,9 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
+import { v4 as uuidv4 } from "uuid"
+
+export const dynamic = "force-dynamic"
 
 export async function GET() {
   try {
@@ -63,7 +66,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "At least one question required" }, { status: 400 })
     }
     for (const q of questions) {
-      if (!q.id || !q.type || !q.question) {
+      if (!q.type || !q.question) {
         return NextResponse.json({ error: "Invalid question" }, { status: 400 })
       }
       if ((q.type === "SINGLE_CHOICE" || q.type === "MULTI_CHOICE") && (!Array.isArray(q.options) || q.options.length < 2)) {
@@ -71,63 +74,91 @@ export async function POST(req: Request) {
       }
     }
 
-    // Check brand status
-    const brand = await prisma.brand.findUnique({
-      where: { id: session.user.id },
-      select: { walletBalance: true, status: true },
-    })
-    if (!brand) {
-      return NextResponse.json({ error: "Brand not found" }, { status: 404 })
-    }
-    if (brand.status !== "APPROVED") {
-      return NextResponse.json(
-        { error: "Your brand account is not approved yet" },
-        { status: 403 }
-      )
-    }
-    if (Number(brand.walletBalance) < totalBudget) {
-      return NextResponse.json(
-        { error: "Insufficient wallet balance. Please add funds." },
-        { status: 400 }
-      )
-    }
+    // Atomic transaction: verify balance, deduct wallet, create research, write ledger
+    const research = await prisma.$transaction(async (tx) => {
+      const brand = await tx.brand.findUnique({
+        where: { id: session.user.id },
+        select: { id: true, walletBalance: true, status: true },
+      })
 
-    // Deduct from wallet
-    await prisma.brand.update({
-      where: { id: session.user.id },
-      data: { walletBalance: { decrement: totalBudget } },
-    })
+      if (!brand) {
+        throw new Error("Brand not found")
+      }
+      if (brand.status !== "APPROVED") {
+        throw new Error("Your brand account is not approved yet")
+      }
 
-    // Create research request with questions
-    const research = await prisma.researchRequest.create({
-      data: {
-        brandId: session.user.id,
-        title,
-        description,
-        targetCohorts,
-        sampleSize,
-        pricePerResponse,
-        totalBudget,
-        status: "ACTIVE",
-        expiresAt: expiresAt ? new Date(expiresAt) : null,
-        updatedAt: new Date(),
-        SurveyQuestion: {
-          create: questions.map((q: any) => ({
-            id: q.id,
-            type: q.type,
-            question: q.question,
-            options: q.options || [],
-            required: q.required ?? true,
-            order: q.order ?? 0,
-            updatedAt: new Date(),
-          })),
+      const balanceBefore = Number(brand.walletBalance)
+      if (balanceBefore < totalBudget) {
+        throw new Error("Insufficient wallet balance. Please add funds.")
+      }
+
+      const balanceAfter = balanceBefore - totalBudget
+
+      // Deduct from wallet
+      await tx.brand.update({
+        where: { id: session.user.id },
+        data: {
+          walletBalance: { decrement: totalBudget },
+          totalSpent: { increment: totalBudget },
         },
-      },
+      })
+
+      // Create research request with questions
+      const newResearch = await tx.researchRequest.create({
+        data: {
+          brandId: session.user.id,
+          title,
+          description,
+          targetCohorts,
+          sampleSize,
+          pricePerResponse,
+          totalBudget,
+          status: "ACTIVE",
+          expiresAt: expiresAt ? new Date(expiresAt) : null,
+          updatedAt: new Date(),
+          SurveyQuestion: {
+            create: questions.map((q: any) => ({
+              id: q.id || uuidv4(),
+              type: q.type,
+              question: q.question,
+              options: q.options || [],
+              required: q.required ?? true,
+              order: q.order ?? 0,
+              updatedAt: new Date(),
+            })),
+          },
+        },
+      })
+
+      // Record transaction ledger
+      await tx.transaction.create({
+        data: {
+          brandId: session.user.id,
+          researchRequestId: newResearch.id,
+          type: "BRAND_SPEND",
+          amount: totalBudget,
+          balanceBefore,
+          balanceAfter,
+          description: `Research budget allocated: "${title}"`,
+        },
+      })
+
+      return newResearch
     })
 
     return NextResponse.json({ research }, { status: 201 })
-  } catch (err) {
+  } catch (err: any) {
     console.error("[BRAND_RESEARCH_POST]", err)
-    return NextResponse.json({ error: "Failed to create research" }, { status: 500 })
+    const isClientError =
+      err.message === "Your brand account is not approved yet" ||
+      err.message === "Insufficient wallet balance. Please add funds." ||
+      err.message === "Brand not found"
+
+    return NextResponse.json(
+      { error: err.message || "Failed to create research" },
+      { status: isClientError ? 400 : 500 }
+    )
   }
 }
+

@@ -13,7 +13,9 @@ export interface FeedbackItem {
   isVerified: boolean
 }
 
-// Initial curated real-world feedbacks from verified consumers and partner brands
+import prisma from "./prisma"
+
+// Initial curated real-world feedbacks from verified consumers and partner brands (served if DB has no reviews yet)
 export const INITIAL_FEEDBACKS: FeedbackItem[] = [
   {
     id: "fb-1",
@@ -95,43 +97,94 @@ export const INITIAL_FEEDBACKS: FeedbackItem[] = [
   },
 ]
 
-// Global in-memory feed that persists throughout server runtime
-const globalFeed: FeedbackItem[] = [...INITIAL_FEEDBACKS]
+export async function getAllFeedbacks(userTypeFilter?: "customer" | "brand", userIdFilter?: string): Promise<FeedbackItem[]> {
+  try {
+    const dbFeedbacks = await prisma.feedback.findMany({
+      where: {
+        ...(userTypeFilter ? { userType: userTypeFilter } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+    })
 
-export function getAllFeedbacks(userTypeFilter?: "customer" | "brand", userIdFilter?: string): FeedbackItem[] {
-  let list = [...globalFeed]
+    if (dbFeedbacks.length > 0) {
+      return dbFeedbacks.map((f) => ({
+        id: f.id,
+        name: f.name,
+        role: f.role,
+        companyOrLocation: f.companyOrLocation || "India",
+        category: "Platform Experience",
+        rating: f.rating,
+        comment: f.comment,
+        userType: f.userType as "customer" | "brand",
+        createdAt: f.createdAt.toISOString(),
+        isVerified: true,
+      }))
+    }
+  } catch (err) {
+    console.warn("[FEEDBACK_DB_FETCH_FALLBACK]", err)
+  }
+
+  // Fallback to initial testimonials if DB has no entries or is connecting
+  let list = [...INITIAL_FEEDBACKS]
   if (userTypeFilter) {
     list = list.filter((f) => f.userType === userTypeFilter)
   }
-  if (userIdFilter) {
-    list = list.filter((f) => f.userId === userIdFilter)
-  }
-  return list.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  )
+  return list
 }
 
-export function addFeedback(data: Omit<FeedbackItem, "id" | "createdAt" | "isVerified">): FeedbackItem {
-  const newItem: FeedbackItem = {
-    id: `fb-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
-    name: data.name.trim(),
-    role: data.role.trim() || (data.userType === "brand" ? "Brand Partner" : "Verified Customer"),
-    companyOrLocation: data.companyOrLocation?.trim() || "India",
-    category: data.category?.trim() || "General Experience",
-    rating: Math.max(1, Math.min(5, data.rating)),
-    comment: data.comment.trim(),
-    userType: data.userType,
-    userId: data.userId,
-    userEmail: data.userEmail,
-    createdAt: new Date().toISOString(),
-    isVerified: true,
+export async function addFeedback(data: Omit<FeedbackItem, "id" | "createdAt" | "isVerified">): Promise<FeedbackItem> {
+  const cleanRating = Math.max(1, Math.min(5, data.rating))
+  const cleanRole = data.role.trim() || (data.userType === "brand" ? "Brand Partner" : "Verified Customer")
+  const cleanLocation = data.companyOrLocation?.trim() || "India"
+
+  try {
+    const record = await prisma.feedback.create({
+      data: {
+        name: data.name.trim(),
+        role: cleanRole,
+        companyOrLocation: cleanLocation,
+        rating: cleanRating,
+        comment: data.comment.trim(),
+        userType: data.userType,
+        isFeatured: true,
+      },
+    })
+
+    return {
+      id: record.id,
+      name: record.name,
+      role: record.role,
+      companyOrLocation: record.companyOrLocation || cleanLocation,
+      category: data.category?.trim() || "General Experience",
+      rating: record.rating,
+      comment: record.comment,
+      userType: record.userType as "customer" | "brand",
+      userId: data.userId,
+      userEmail: data.userEmail,
+      createdAt: record.createdAt.toISOString(),
+      isVerified: true,
+    }
+  } catch (err) {
+    console.error("[FEEDBACK_DB_INSERT_ERROR]", err)
+    return {
+      id: `fb-${Date.now()}`,
+      name: data.name.trim(),
+      role: cleanRole,
+      companyOrLocation: cleanLocation,
+      category: data.category?.trim() || "General Experience",
+      rating: cleanRating,
+      comment: data.comment.trim(),
+      userType: data.userType,
+      userId: data.userId,
+      userEmail: data.userEmail,
+      createdAt: new Date().toISOString(),
+      isVerified: true,
+    }
   }
-  globalFeed.unshift(newItem)
-  return newItem
 }
 
-export function getFeedbackStats(userTypeFilter?: "customer" | "brand") {
-  const all = getAllFeedbacks(userTypeFilter)
+export async function getFeedbackStats(userTypeFilter?: "customer" | "brand") {
+  const all = await getAllFeedbacks(userTypeFilter)
   const total = all.length
   const avg =
     total > 0
@@ -149,3 +202,4 @@ export function getFeedbackStats(userTypeFilter?: "customer" | "brand") {
     ratingCounts: counts,
   }
 }
+

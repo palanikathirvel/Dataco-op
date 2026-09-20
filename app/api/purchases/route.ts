@@ -3,6 +3,9 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { v4 as uuidv4 } from "uuid"
+import { rateLimit, getClientIp } from "@/lib/ratelimit"
+
+export const dynamic = "force-dynamic"
 
 export async function GET() {
   try {
@@ -13,6 +16,23 @@ export async function GET() {
 
     const purchases = await prisma.purchase.findMany({
       where: { userId: session.user.id },
+      select: {
+        id: true,
+        platform: true,
+        productName: true,
+        category: true,
+        brand: true,
+        amount: true,
+        currency: true,
+        orderId: true,
+        purchaseDate: true,
+        status: true,
+        method: true,
+        screenshotUrl: true,
+        verifiedAt: true,
+        rejectReason: true,
+        createdAt: true,
+      },
       orderBy: { createdAt: "desc" },
     })
 
@@ -25,10 +45,21 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req)
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+
+    // Rate limit: 20 purchase uploads per 10 minutes
+    const limit = rateLimit(`purchase-upload:${session.user.id}:${ip}`, { limit: 20, windowMs: 10 * 60 * 1000 })
+    if (!limit.success) {
+      return NextResponse.json(
+        { error: "Too many upload requests. Please wait a few minutes." },
+        { status: 429 }
+      )
+    }
+
 
     const formData = await req.formData()
     const platform = formData.get("platform") as string

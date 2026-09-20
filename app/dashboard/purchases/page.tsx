@@ -25,6 +25,23 @@ export default async function PurchasesPage() {
 
   const purchases = await prisma.purchase.findMany({
     where: { userId: session.user.id },
+    select: {
+      id: true,
+      platform: true,
+      productName: true,
+      category: true,
+      brand: true,
+      amount: true,
+      currency: true,
+      orderId: true,
+      purchaseDate: true,
+      status: true,
+      method: true,
+      screenshotUrl: true,
+      verifiedAt: true,
+      rejectReason: true,
+      createdAt: true,
+    },
     orderBy: { createdAt: "desc" },
   })
 

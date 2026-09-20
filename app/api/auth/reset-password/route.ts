@@ -2,9 +2,13 @@ import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import prisma from "@/lib/prisma"
 import { sendPasswordChangedEmail } from "@/lib/email"
+import { rateLimit, getClientIp } from "@/lib/ratelimit"
+
+export const dynamic = "force-dynamic"
 
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req)
     const { email, code, password } = await req.json()
 
     if (!email || !code || !password) {
@@ -24,10 +28,20 @@ export async function POST(req: Request) {
     const cleanEmail = email.toLowerCase().trim()
     const cleanCode = code.toString().trim()
 
+    // Rate limiting: max 5 reset attempts per 10 minutes per IP/email
+    const limit = rateLimit(`reset-pass:${cleanEmail}:${ip}`, { limit: 5, windowMs: 10 * 60 * 1000 })
+    if (!limit.success) {
+      return NextResponse.json(
+        { error: "Too many reset attempts. Please wait 10 minutes before trying again." },
+        { status: 429 }
+      )
+    }
+
     // 1. Verify token
     const tokenRecord = await prisma.verificationToken.findFirst({
       where: {
         identifier: cleanEmail,
+
         token: cleanCode,
       },
     })

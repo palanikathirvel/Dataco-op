@@ -69,8 +69,27 @@ export function NotificationBell({ variant = "consumer" }: NotificationBellProps
 
   useEffect(() => {
     fetchNotifications()
-    const interval = setInterval(fetchNotifications, 25000)
-    return () => clearInterval(interval)
+
+    function poll() {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        fetchNotifications()
+      }
+    }
+
+    const interval = setInterval(poll, 30000)
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        fetchNotifications()
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+    }
   }, [])
 
   // Close on Escape key

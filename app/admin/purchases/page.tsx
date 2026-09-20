@@ -14,12 +14,28 @@ export default async function AdminPurchasesPage() {
   if (!session || session.user.role !== "ADMIN") redirect("/login")
 
   const purchases = await prisma.purchase.findMany({
-    include: {
+    select: {
+      id: true,
+      platform: true,
+      productName: true,
+      category: true,
+      brand: true,
+      amount: true,
+      currency: true,
+      orderId: true,
+      purchaseDate: true,
+      status: true,
+      method: true,
+      screenshotUrl: true,
+      verifiedAt: true,
+      rejectReason: true,
+      createdAt: true,
       user: { select: { id: true, name: true, email: true } },
     },
     orderBy: { createdAt: "desc" },
     take: 100,
   })
+
 
   const pending = purchases.filter((p) => p.status === "PENDING_VERIFICATION")
   const verified = purchases.filter((p) => p.status === "VERIFIED")

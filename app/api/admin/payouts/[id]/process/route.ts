@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 
+export const dynamic = "force-dynamic"
+
 export async function POST(
   req: Request,
   { params }: { params: { id: string } }
@@ -21,7 +23,15 @@ export async function POST(
       include: { user: { select: { id: true, walletBalance: true } } },
     })
     if (!payout) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 })
+      return NextResponse.json({ error: "Payout request not found" }, { status: 404 })
+    }
+
+    // Idempotency: prevent double-processing
+    if (payout.status !== "PENDING") {
+      return NextResponse.json(
+        { error: `Payout request already ${payout.status.toLowerCase()}` },
+        { status: 400 }
+      )
     }
 
     if (action === "reject") {
@@ -32,57 +42,80 @@ export async function POST(
           rejectReason: reason ?? "Rejected by admin",
         },
       })
-      return NextResponse.json({ success: true })
+      return NextResponse.json({ success: true, status: "REJECTED" })
     }
 
-    // Process: verify user has enough balance
-    if (payout.user && Number(payout.user.walletBalance) < Number(payout.amount)) {
-      return NextResponse.json(
-        { error: "Insufficient balance" },
-        { status: 400 }
-      )
+    if (action !== "approve") {
+      return NextResponse.json({ error: "Invalid action" }, { status: 400 })
     }
 
-    // Deduct from user wallet
-    if (payout.user) {
-      await prisma.user.update({
-        where: { id: payout.user.id },
+    // Atomic transaction for approval, wallet deduction, and audit ledger
+    const result = await prisma.$transaction(async (tx) => {
+      // Re-fetch user in transaction with current balance
+      const currentUser = await tx.user.findUnique({
+        where: { id: payout.userId },
+        select: { id: true, walletBalance: true },
+      })
+
+      if (!currentUser) {
+        throw new Error("User account not found")
+      }
+
+      const balanceBefore = Number(currentUser.walletBalance)
+      const payoutAmount = Number(payout.amount)
+
+      if (balanceBefore < payoutAmount) {
+        throw new Error("Insufficient user balance")
+      }
+
+      const balanceAfter = balanceBefore - payoutAmount
+
+      // 1. Deduct from user wallet
+      await tx.user.update({
+        where: { id: currentUser.id },
         data: {
-          walletBalance: { decrement: Number(payout.amount) },
+          walletBalance: { decrement: payoutAmount },
         },
       })
-    }
 
-    // Mark payout as completed
-    await prisma.payoutRequest.update({
-      where: { id: params.id },
-      data: {
-        status: "COMPLETED",
-        processedAt: new Date(),
-        processedBy: session.user.id,
-        razorpayPayoutId: transactionId ?? null,
-      },
-    })
-
-    // Record transaction
-    if (payout.user) {
-      const balanceBefore = Number(payout.user.walletBalance)
-      const balanceAfter = balanceBefore - Number(payout.amount)
-      await prisma.transaction.create({
+      // 2. Mark payout as completed
+      const updatedPayout = await tx.payoutRequest.update({
+        where: { id: params.id },
         data: {
-          userId: payout.user.id,
+          status: "COMPLETED",
+          processedAt: new Date(),
+          processedBy: session.user.id,
+          razorpayPayoutId: transactionId ?? null,
+        },
+      })
+
+      // 3. Record transaction in ledger
+      await tx.transaction.create({
+        data: {
+          userId: currentUser.id,
           type: "PAYOUT",
-          amount: Number(payout.amount),
+          amount: payoutAmount,
           balanceBefore,
           balanceAfter,
           description: `Payout to UPI ${payout.upiId}`,
+          metadata: {
+            payoutRequestId: payout.id,
+            processedBy: session.user.id,
+            razorpayPayoutId: transactionId ?? null,
+          },
         },
       })
-    }
 
-    return NextResponse.json({ success: true })
-  } catch (err) {
+      return updatedPayout
+    })
+
+    return NextResponse.json({ success: true, payout: result })
+  } catch (err: any) {
     console.error("[PROCESS_PAYOUT]", err)
-    return NextResponse.json({ error: "Failed" }, { status: 500 })
+    return NextResponse.json(
+      { error: err.message || "Failed to process payout" },
+      { status: 500 }
+    )
   }
 }
+

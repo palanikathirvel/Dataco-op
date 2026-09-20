@@ -17,7 +17,10 @@ export default async function SurveysPage() {
     prisma.researchRequest.findMany({
       where: {
         status: "ACTIVE",
-        expiresAt: { gt: new Date() },
+        OR: [
+          { expiresAt: null },
+          { expiresAt: { gt: new Date() } },
+        ],
         NOT: { responses: { some: { userId: session.user.id } } },
       },
       include: {

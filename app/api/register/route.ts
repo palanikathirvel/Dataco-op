@@ -1,15 +1,31 @@
 import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import prisma from "@/lib/prisma"
+import { rateLimit, getClientIp } from "@/lib/ratelimit"
+
+export const dynamic = "force-dynamic"
 
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req)
     const body = await req.json()
     const { email, password, name, phone, age, gender, city, pincode } = body
 
     if (!email || typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: "Valid email required" }, { status: 400 })
     }
+
+    const cleanEmail = email.toLowerCase().trim()
+
+    // Rate limiting: 5 registrations per hour per IP
+    const limit = rateLimit(`register:ip:${ip}`, { limit: 10, windowMs: 60 * 60 * 1000 })
+    if (!limit.success) {
+      return NextResponse.json(
+        { error: "Too many registration attempts. Please try again later." },
+        { status: 429 }
+      )
+    }
+
     if (!password || password.length < 8) {
       return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 })
     }
@@ -23,7 +39,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Pincode must be 6 digits" }, { status: 400 })
     }
 
-    const existing = await prisma.user.findUnique({ where: { email } })
+    const existing = await prisma.user.findFirst({
+      where: { email: { equals: cleanEmail, mode: "insensitive" } },
+    })
     if (existing) {
       return NextResponse.json({ error: "Email already registered" }, { status: 409 })
     }
@@ -32,7 +50,7 @@ export async function POST(req: Request) {
 
     const user = await prisma.user.create({
       data: {
-        email,
+        email: cleanEmail,
         passwordHash,
         name: name.trim(),
         phone: phone ?? null,
@@ -50,7 +68,7 @@ export async function POST(req: Request) {
     // Send welcome email asynchronously
     try {
       const { sendWelcomeEmail } = await import("@/lib/email")
-      await sendWelcomeEmail(email, name.trim(), "USER")
+      await sendWelcomeEmail(cleanEmail, name.trim(), "USER")
     } catch (emailErr) {
       console.error("[WELCOME_EMAIL_ERROR]", emailErr)
     }
@@ -61,3 +79,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 })
   }
 }
+
