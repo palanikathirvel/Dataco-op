@@ -67,7 +67,7 @@ export default async function BrandWalletPage() {
           <Card>
             <CardHeader>
               <CardTitle>Add funds</CardTitle>
-              <CardDescription>Coming soon: Razorpay integration</CardDescription>
+              <CardDescription>Instant top-up via Razorpay (UPI, Cards, NetBanking)</CardDescription>
             </CardHeader>
             <CardContent>
               <BrandWalletClient />
