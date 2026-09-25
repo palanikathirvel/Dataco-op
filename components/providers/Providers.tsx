@@ -21,14 +21,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <PKAgencyChatbot />
           <Toaster
             position="top-right"
-            richColors
+            richColors={false}
             expand={false}
+            closeButton
             toastOptions={{
               duration: 4000,
+              className: "datacop-popup-toast",
               style: {
-                background: "hsl(var(--background))",
-                color: "hsl(var(--foreground))",
-                border: "1px solid hsl(var(--border))",
+                background: "#1B3A5C",
+                color: "#FFFFFF",
+                border: "2px solid #142C46",
+                boxShadow: "0 10px 25px -5px rgba(27, 58, 92, 0.45), 0 8px 10px -6px rgba(27, 58, 92, 0.35)",
               },
             }}
           />

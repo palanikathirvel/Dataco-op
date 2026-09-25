@@ -224,26 +224,26 @@ export function NotificationBell({ variant = "consumer" }: NotificationBellProps
             }
           }}
         >
-          <div className="relative w-full max-w-lg bg-background dark:bg-card border-2 border-border shadow-2xl rounded-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 fade-in duration-200 font-sans mx-auto">
+          <div className="relative w-full max-w-lg bg-background dark:bg-card border-2 border-[#142C46] border-t-4 border-t-[#1B3A5C] shadow-2xl rounded-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 fade-in duration-200 font-sans mx-auto">
             
-            {/* Header */}
-            <div className="px-5 py-4 bg-muted/40 border-b flex items-center justify-between shrink-0">
+            {/* Header with #1B3A5C theme */}
+            <div className="px-5 py-4 bg-[#1B3A5C] border-b border-[#142C46] text-white flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                <div className="h-9 w-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white">
                   <Bell className="h-5 w-5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 id={dialogTitleId} className="text-base font-bold text-foreground">
+                    <h3 id={dialogTitleId} className="text-base font-bold text-white tracking-tight">
                       Notification Center
                     </h3>
                     {unreadCount > 0 && (
-                      <span className="text-[11px] font-mono font-bold bg-[#E3474F]/10 text-[#E3474F] px-2 py-0.5 rounded-full border border-[#E3474F]/20">
+                      <span className="text-[11px] font-mono font-bold bg-[#E3474F] text-white px-2 py-0.5 rounded-full shadow-xs">
                         {unreadCount} new
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <p className="text-xs text-white/80 mt-0.5">
                     Real-time updates, alerts, and platform activity
                   </p>
                 </div>
@@ -255,14 +255,14 @@ export function NotificationBell({ variant = "consumer" }: NotificationBellProps
                   onClick={fetchNotifications}
                   disabled={loading}
                   title="Refresh notifications"
-                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+                  className="p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-50"
                 >
                   <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  className="p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors"
                   aria-label="Close notification center"
                 >
                   <X className="h-5 w-5" />
